@@ -15,7 +15,7 @@ NAVI 360 helps people understand government notices in plain language. Upload a 
 - Lets users copy or download a privacy-safe summary.
 - Stores completed analysis metadata in SQLite, but never retains uploaded file bytes, pasted text, extracted source text, previews, or audio.
 
-## Built with
+## Built with 
 
 - Frontend: React and Vite
 - Backend: Python, FastAPI, Pydantic, and Uvicorn
