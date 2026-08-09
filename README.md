@@ -6,7 +6,7 @@ NAVI 360 helps people understand government notices in plain language. Upload a 
 
 ## Highlights
 
-- Accepts JPG, PNG, WEBP, PDF, TXT, Markdown, and pasted text.
+- Accepts JPG, PNG, WEBP, PDF, TXT, Markdown, and pasted text. 
 - Supports English, Hindi, Telugu, Tamil, and Bengali.
 - Identifies document facts, helpful interpretation, and details that still need confirmation.
 - Produces a document checklist, evidence record, and evidence timeline.
