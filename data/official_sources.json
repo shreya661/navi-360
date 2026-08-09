@@ -1,0 +1,57 @@
+{
+  "scholarship": {
+    "name": "National Scholarship Portal",
+    "url": "https://scholarships.gov.in/",
+    "reason": "Use the official Government of India portal to check the current scheme, documents, deadline, and application status."
+  },
+  "tax_notice": {
+    "name": "Income Tax e-Filing Portal",
+    "url": "https://www.incometax.gov.in/iec/foportal/",
+    "reason": "Use the official Income Tax Department portal to verify a tax communication and respond securely."
+  },
+  "utility_bill": {
+    "name": "National Portal of India",
+    "url": "https://www.india.gov.in/",
+    "reason": "Use the official national portal to find your state electricity provider; do not pay through a link in an unverified message."
+  },
+  "farmer_support": {
+    "name": "PM-KISAN Samman Nidhi",
+    "url": "https://pmkisan.gov.in/",
+    "reason": "Use the official Department of Agriculture portal to check beneficiary status, e-KYC, and scheme notices."
+  },
+  "labour": {
+    "name": "e-Shram Portal",
+    "url": "https://www.eshram.gov.in/",
+    "reason": "Use the official Ministry of Labour portal for e-Shram registration, updates, and helpdesk support."
+  },
+  "health_scheme": {
+    "name": "National Health Authority",
+    "url": "https://nha.gov.in/",
+    "reason": "Use the official National Health Authority website to verify Ayushman Bharat and PM-JAY information."
+  },
+  "pension": {
+    "name": "Pension Fund Regulatory and Development Authority",
+    "url": "https://www.pfrda.org.in/",
+    "reason": "Use the official PFRDA website to verify pension and National Pension System notices."
+  },
+  "identity_document": {
+    "name": "myAadhaar",
+    "url": "https://myaadhaar.uidai.gov.in/",
+    "reason": "Use the official UIDAI portal for Aadhaar services; never share an OTP with an unverified caller or site."
+  },
+  "education_admission": {
+    "name": "University Grants Commission",
+    "url": "https://www.ugc.gov.in/",
+    "reason": "Use the official UGC website to verify higher-education notices and student services."
+  },
+  "grievance": {
+    "name": "CPGRAMS Public Grievance Portal",
+    "url": "https://pgportal.gov.in/",
+    "reason": "Use the official Government of India grievance portal to lodge or track a public grievance."
+  },
+  "general_notice": {
+    "name": "National Portal of India",
+    "url": "https://www.india.gov.in/",
+    "reason": "Use this official Government of India portal to identify the responsible department before taking action."
+  }
+}
