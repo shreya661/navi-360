@@ -151,6 +151,17 @@ Open `http://localhost:8080`.
 
 For full production guidance, including Railway deployment and a multi-replica database note, read [DEPLOYMENT.md](DEPLOYMENT.md).
 
+## Free demo deployment (Render)
+
+This repository includes a [`render.yaml`](render.yaml) Blueprint for a no-payment-method demo deployment. It builds the root `Dockerfile`, which serves the React frontend and FastAPI backend from one Render web service.
+
+1. Create a free Render account and open [Render Blueprint deploy](https://render.com/deploy).
+2. Choose this repository: `https://github.com/shreya661/navi-360`.
+3. Keep the **Free** instance type and create the service.
+4. Wait for the build to finish, then open the supplied `onrender.com` URL.
+
+The free service sleeps after 15 minutes of inactivity, so the first request after sleeping can take about a minute. Its filesystem is temporary: saved SQLite analyses disappear after a restart or redeploy. The default configuration runs in demo fallback mode without an AI key. Add `NVIDIA_API_KEY` as a Render environment secret when you are ready to enable live AI responses.
+
 ## Security and privacy
 
 - Production requires explicit HTTPS origins; wildcard CORS is rejected.

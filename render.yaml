@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: navi-360
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: EXPOSE_DOCS
+        value: "false"
+      - key: REQUIRE_LIVE_AI
+        value: "false"
+      - key: ANALYSIS_RETENTION_DAYS
+        value: "1"
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "20"
