@@ -63,6 +63,7 @@ async def readiness() -> dict[str, bool]:
     return {"ready": True, "live_ai_configured": bool(settings.nvidia_api_key)}
 
 
-frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+# In the production image, the React bundle is copied to /app/frontend/dist.
+frontend_dist = Path(__file__).resolve().parents[1] / "frontend" / "dist"
 if frontend_dist.exists():
     app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
