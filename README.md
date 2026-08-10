@@ -1,33 +1,57 @@
+<div align="center">
+
 # NAVI 360
 
-NAVI 360 helps people understand government notices in plain language. Upload a notice, screenshot, PDF, message, or pasted text and receive an evidence-aware explanation, checklist, timeline, official next step, and optional audio in the language you select.
+**Turn confusing government notices into plain-language guidance — in your own language.**
 
-> NAVI 360 is an explanation and navigation aid. It does not determine eligibility, provide legal advice, or replace the official government portal.
+[![License: Unlicensed](https://img.shields.io/badge/license-unlicensed-lightgrey.svg)](#license)
+[![Backend: FastAPI](https://img.shields.io/badge/backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
+[![Frontend: React + Vite](https://img.shields.io/badge/frontend-React%20%2B%20Vite-61DAFB.svg)](https://vitejs.dev/)
+[![Deploy on Render](https://img.shields.io/badge/deploy-Render-46E3B7.svg)](https://render.com/deploy)
 
-## Highlights
+[Live Demo](#free-demo-deployment-render) · [Quick Start](#quick-start) · [API Reference](#api) · [Deployment Guide](DEPLOYMENT.md)
 
-- Accepts JPG, PNG, WEBP, PDF, TXT, Markdown, and pasted text. 
-- Supports English, Hindi, Telugu, Tamil, and Bengali.
-- Identifies document facts, helpful interpretation, and details that still need confirmation.
-- Produces a document checklist, evidence record, and evidence timeline.
-- Uses a curated catalog of official sources; it never generates government URLs at runtime.
-- Offers Bhashini text-to-speech when configured, with a browser-voice fallback where available.
-- Lets users copy or download a privacy-safe summary.
-- Stores completed analysis metadata in SQLite, but never retains uploaded file bytes, pasted text, extracted source text, previews, or audio.
+</div>
 
-## Built with 
+---
 
-- Frontend: React and Vite
-- Backend: Python, FastAPI, Pydantic, and Uvicorn
-- AI services: NVIDIA NIM (optional for live extraction, rewriting, and claim tagging)
-- Voice: Bhashini (optional)
-- Storage: SQLite
-- Deployment: Docker, Docker Compose, and Railway
+## What it does
+
+Government notices — tax letters, welfare eligibility forms, court summons, utility disconnection notices — are often dense, jargon-heavy, and stressful to read. **NAVI 360** takes a photo, PDF, screenshot, or pasted block of text and returns:
+
+- A **plain-language explanation** of what the notice actually says
+- A **checklist** of what you need to do next
+- A **timeline** of relevant dates and deadlines
+- The **official next step**, sourced only from a vetted catalog of government links
+- Optional **audio playback** in your selected language
+
+> ⚠️ NAVI 360 is an explanation and navigation aid. It does not determine eligibility, provide legal advice, or replace the official government portal.
+
+## Features
+
+| | |
+|---|---|
+| 📄 **Multi-format input** | JPG, PNG, WEBP, PDF, TXT, Markdown, or pasted text |
+| 🌐 **5 languages** | English, Hindi, Telugu, Tamil, Bengali |
+| 🔍 **Evidence-aware** | Separates confirmed document facts from details that still need verification |
+| ✅ **Actionable output** | Document checklist, evidence record, and timeline — not just a summary |
+| 🔗 **Trusted sources only** | Official links come from a curated catalog; the app never generates government URLs on the fly |
+| 🔊 **Text-to-speech** | Optional Bhashini voice output, with browser-voice fallback |
+| 🔒 **Privacy-first** | Uploaded files, pasted text, extracted text, previews, and audio are never stored — only analysis metadata |
+
+## Tech stack
+
+- **Frontend:** React + Vite
+- **Backend:** Python, FastAPI, Pydantic, Uvicorn
+- **AI:** [NVIDIA NIM](https://build.nvidia.com/) (optional — enables live extraction, plain-language rewriting, and claim tagging)
+- **Voice:** [Bhashini](https://bhashini.gov.in/) (optional text-to-speech)
+- **Storage:** SQLite (metadata only)
+- **Deployment:** Docker, Docker Compose, Railway, Render
 
 ## Project structure
 
 ```text
-Navi 360/
+navi-360/
 ├── backend/
 │   ├── app/
 │   │   ├── routes/          # API endpoints
@@ -50,49 +74,35 @@ Navi 360/
 
 - Python 3.13+
 - Node.js 24+ and npm
-- An NVIDIA API key for live AI responses (optional for local demo behavior)
+- An NVIDIA API key for live AI responses (optional — the app runs in demo fallback mode without one)
 
-### 1. Create and configure your environment
+### 1. Configure your environment
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Open `.env` and set `NVIDIA_API_KEY` to enable live extraction, plain-language rewriting, and claim tagging. Bhashini credentials are optional. Do not commit your `.env` file.
+Open `.env` and set `NVIDIA_API_KEY` to enable live extraction, plain-language rewriting, and claim tagging. Bhashini credentials are optional. **Never commit your `.env` file.**
 
-### 2. Install backend dependencies
+### 2. Install and run the backend
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r backend\requirements.txt
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --reload --port 8000
 ```
 
-### 3. Install frontend dependencies
+### 3. Install and run the frontend
 
 ```powershell
 cd frontend
 npm install
-cd ..
-```
-
-### 4. Start the API
-
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --reload --port 8000
-```
-
-### 5. Start the web app
-
-In another terminal:
-
-```powershell
-cd frontend
 npm run dev
 ```
 
-Open the Vite address shown in the terminal, normally `http://localhost:5173`.
+Open the Vite address shown in the terminal — normally `http://localhost:5173`.
 
 ## Environment variables
 
@@ -137,50 +147,36 @@ When `EXPOSE_DOCS=true`, interactive API documentation is available at `http://l
 
 \* Provide at least one file or non-empty `text_input`.
 
-## Docker
+## Deployment
 
-The Compose setup runs the API and frontend together. It persists SQLite data in a named Docker volume.
+NAVI 360 ships with Docker, Docker Compose, Railway, and Render configs. For step-by-step production guidance — including HTTPS/CORS setup, persistent storage, and a multi-replica database note — see **[DEPLOYMENT.md](DEPLOYMENT.md)**.
 
-```powershell
-Copy-Item .env.example .env
-# Add NVIDIA_API_KEY and production settings to .env.
-docker compose up --build -d
-```
+**Fastest path to a live demo:**
 
-Open `http://localhost:8080`.
-
-For full production guidance, including Railway deployment and a multi-replica database note, read [DEPLOYMENT.md](DEPLOYMENT.md).
-
-## Free demo deployment (Render)
-
-This repository includes a [`render.yaml`](render.yaml) Blueprint for a no-payment-method demo deployment. It builds the root `Dockerfile`, which serves the React frontend and FastAPI backend from one Render web service.
-
-1. Create a free Render account and open [Render Blueprint deploy](https://render.com/deploy).
-2. Choose this repository: `https://github.com/shreya661/navi-360`.
+1. Create a free [Render](https://render.com) account.
+2. Deploy this repo as a Blueprint using the included [`render.yaml`](render.yaml).
 3. Keep the **Free** instance type and create the service.
-4. Wait for the build to finish, then open the supplied `onrender.com` URL.
+4. Open the supplied `onrender.com` URL once the build finishes.
 
-The free service sleeps after 15 minutes of inactivity, so the first request after sleeping can take about a minute. Its filesystem is temporary: saved SQLite analyses disappear after a restart or redeploy. The default configuration runs in demo fallback mode without an AI key. Add `NVIDIA_API_KEY` as a Render environment secret when you are ready to enable live AI responses.
+The free tier sleeps after 15 minutes of inactivity (first request after sleep can take ~1 minute) and its filesystem is temporary, so saved analyses don't survive a restart. Add `NVIDIA_API_KEY` as a Render secret to enable live AI responses.
 
 ## Security and privacy
 
 - Production requires explicit HTTPS origins; wildcard CORS is rejected.
 - The API applies an in-process rate limit to analysis requests.
-- Responses include common hardening headers, including `X-Frame-Options` and `X-Content-Type-Options`.
-- No original upload content, pasted text, extracted source text, previews, or generated audio is saved.
-- Official links come only from [`data/official_sources.json`](data/official_sources.json). Review this catalog regularly.
-- SQLite is appropriate for one persistent service replica. Use a shared database such as PostgreSQL before scaling to multiple backend replicas.
+- Responses include hardening headers (`X-Frame-Options`, `X-Content-Type-Options`, etc.).
+- No original upload content, pasted text, extracted source text, previews, or generated audio is ever saved.
+- Official links come only from [`data/official_sources.json`](data/official_sources.json) — review this catalog regularly.
+- SQLite suits a single persistent replica. Migrate to PostgreSQL before scaling to multiple backend replicas.
 
-## Deployment checklist
+## Roadmap / known limitations
 
-Before making NAVI 360 public:
+- SQLite storage limits deployment to a single backend replica.
+- No license file is currently included — add one before accepting external contributions.
 
-1. Set `APP_ENV=production` and `EXPOSE_DOCS=false`.
-2. Set `REQUIRE_LIVE_AI=true` and configure `NVIDIA_API_KEY`.
-3. Set `ALLOWED_ORIGINS` to the exact public HTTPS frontend origin.
-4. Use persistent storage for the SQLite database, or migrate to PostgreSQL for multiple replicas.
-5. Keep all provider credentials in your hosting platform’s encrypted environment variables.
-6. Confirm `/health` and `/ready` after deployment.
+## Contributing
+
+Issues and pull requests are welcome. Please open an issue describing the change before submitting a large PR.
 
 ## License
 
