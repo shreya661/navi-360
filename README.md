@@ -9,7 +9,7 @@
 [![Frontend: React + Vite](https://img.shields.io/badge/frontend-React%20%2B%20Vite-61DAFB.svg)](https://vitejs.dev/)
 [![Deploy on Render](https://img.shields.io/badge/deploy-Render-46E3B7.svg)](https://render.com/deploy)
 
-[Live Demo](#free-demo-deployment-render) · [Quick Start](#quick-start) · [API Reference](#api) · [Deployment Guide](DEPLOYMENT.md)
+
 
 </div>
 
