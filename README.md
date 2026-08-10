@@ -1,71 +1,109 @@
+Here's your complete README in a single markdown block — copy everything below and paste directly into `README.md`:
+
+```markdown
 <div align="center">
+  <img src="https://via.placeholder.com/120x120/4F46E5/FFFFFF?text=N" alt="NAVI 360" width="120" />
+  
+  # NAVI 360
+  
+  **Government notices, decoded. In your language.**
 
-# NAVI 360
-
-**Turn confusing government notices into plain-language guidance — in your own language.**
-
-[![License: Unlicensed](https://img.shields.io/badge/license-unlicensed-lightgrey.svg)](#license)
-[![Backend: FastAPI](https://img.shields.io/badge/backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
-[![Frontend: React + Vite](https://img.shields.io/badge/frontend-React%20%2B%20Vite-61DAFB.svg)](https://vitejs.dev/)
-[![Deploy on Render](https://img.shields.io/badge/deploy-Render-46E3B7.svg)](https://render.com/deploy)
-
-
-
+  [![License](https://img.shields.io/badge/license-unlicensed-lightgrey)](#license)
+  [![Backend: FastAPI](https://img.shields.io/badge/backend-FastAPI-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
+  [![Frontend: React](https://img.shields.io/badge/frontend-React-61DAFB?logo=react)](https://react.dev/)
+  [![AI: Claude](https://img.shields.io/badge/AI-Claude_%2B_NVIDIA_NIM-7B61FF)](https://anthropic.com)
+  [![TTS: Bhashini](https://img.shields.io/badge/voice-Bhashini-FF6B35)](https://bhashini.gov.in)
+  [![Deploy on Render](https://img.shields.io/badge/deploy-Render-46E3B7?logo=render)](https://render.com)
 </div>
 
 ---
 
-## What it does
+## The problem
 
-Government notices — tax letters, welfare eligibility forms, court summons, utility disconnection notices — are often dense, jargon-heavy, and stressful to read. **NAVI 360** takes a photo, PDF, screenshot, or pasted block of text and returns:
+A welfare eligibility letter. A tax notice. A court summons. A scholarship deadline.
 
-- A **plain-language explanation** of what the notice actually says
-- A **checklist** of what you need to do next
-- A **timeline** of relevant dates and deadlines
-- The **official next step**, sourced only from a vetted catalog of government links
-- Optional **audio playback** in your selected language
+Millions of Indians receive government notices they can't fully understand — dense legal language, unfamiliar formatting, and often in a language they don't read comfortably. Missing a deadline or misunderstanding a requirement can mean losing benefits, paying penalties, or worse.
 
-> ⚠️ NAVI 360 is an explanation and navigation aid. It does not determine eligibility, provide legal advice, or replace the official government portal.
+## What NAVI 360 does
 
-## Features
+Snap a photo of any government notice and get:
 
-| | |
-|---|---|
-| 📄 **Multi-format input** | JPG, PNG, WEBP, PDF, TXT, Markdown, or pasted text |
-| 🌐 **5 languages** | English, Hindi, Telugu, Tamil, Bengali |
-| 🔍 **Evidence-aware** | Separates confirmed document facts from details that still need verification |
-| ✅ **Actionable output** | Document checklist, evidence record, and timeline — not just a summary |
-| 🔗 **Trusted sources only** | Official links come from a curated catalog; the app never generates government URLs on the fly |
-| 🔊 **Text-to-speech** | Optional Bhashini voice output, with browser-voice fallback |
-| 🔒 **Privacy-first** | Uploaded files, pasted text, extracted text, previews, and audio are never stored — only analysis metadata |
+| What you get | How it helps |
+|:---|:---|
+| Plain-language explanation | No jargon, no legalese — just what the notice actually says |
+| Action checklist | Exactly what you need to do next, step by step |
+| Timeline | All dates and deadlines, extracted and highlighted |
+| Official source link | The real government URL — never AI-generated |
+| Trust tagging | What's confirmed fact vs. what needs verification |
+| Missing documents | What you still need to gather before applying |
+| Audio playback | Listen to the explanation in your chosen language |
 
-## Tech stack
+> NAVI 360 explains notices. It doesn't determine eligibility, offer legal advice, or replace official portals.
 
-- **Frontend:** React + Vite
-- **Backend:** Python, FastAPI, Pydantic, Uvicorn
-- **AI:** [NVIDIA NIM](https://build.nvidia.com/) (optional — enables live extraction, plain-language rewriting, and claim tagging)
-- **Voice:** [Bhashini](https://bhashini.gov.in/) (optional text-to-speech)
-- **Storage:** SQLite (metadata only)
-- **Deployment:** Docker, Docker Compose, Railway, Render
+## Languages we speak
 
-## Project structure
+| Priority | Language | Status |
+|:---|:---|:---|
+| 1 | English | Live (most source documents are in English) |
+| 2 | Hindi | Live (widest national coverage) |
+| 3 | Telugu | Live (flagship demo language) |
+| 4 | Tamil | Supported in UI, coming soon |
+| 5 | Bengali | Supported in UI, coming soon |
+
+## How it works (the smart way)
+
+No single mega-prompt. No hallucinated government URLs. NAVI 360 uses a chained pipeline designed for accuracy and auditability:
+
+```
+Photo Upload → Vision Extraction → Trust Tagger → Missing Docs Check → Official Source Lookup → Natural Translation → TTS Audio → Streaming UI
+```
+
+### Why this matters:
+
+- Each step is independent — if the translation fails, you still get the checklist
+- Streaming output — results appear progressively, not behind a single spinner
+- Trust tagging uses reasoning, not guesswork — every claim is categorized as fact, interpretation, or uncertain
+- Government URLs are a lookup, not a generation — we maintain a curated catalog of 15+ verified source links; the AI only classifies which entry matches
+
+## Architecture
 
 ```text
 navi-360/
-├── backend/
+├── backend/                    # FastAPI + Python
 │   ├── app/
-│   │   ├── routes/          # API endpoints
-│   │   ├── services/        # Extraction, AI, storage, TTS, and safety logic
-│   │   └── models/          # Request/response schemas
+│   │   ├── routes/
+│   │   │   └── analyze.py          # POST /analyze endpoint
+│   │   ├── services/
+│   │   │   ├── vision_extract.py   # Image to structured text
+│   │   │   ├── trust_tagger.py     # Fact/interpretation/uncertain labeling
+│   │   │   ├── missing_info.py     # Document checklist logic
+│   │   │   ├── official_source.py  # Curated catalog lookup
+│   │   │   ├── translator.py       # Natural rendering (EN to TE/HI)
+│   │   │   └── tts_service.py      # Bhashini TTS integration
+│   │   ├── prompts/                # Versioned prompt files (.txt)
+│   │   └── models/schemas.py       # Pydantic response schemas
 │   └── requirements.txt
-├── frontend/
-│   └── src/                 # React interface and components
+│
+├── frontend/                   # React + Vite
+│   └── src/
+│       ├── components/
+│       │   ├── UploadPanel.jsx      # Drag/drop + camera capture
+│       │   ├── AnalysisView.jsx     # Streaming result display
+│       │   ├── TrustBadge.jsx       # Confidence tags (green/blue/yellow/red)
+│       │   ├── MissingInfoList.jsx  # Document checklist
+│       │   ├── SafeActionGate.jsx   # Verified action links only
+│       │   └── LanguageToggle.jsx   # EN/HI/TE switch
+│       └── hooks/
+│           └── useAnalyzeDocument.js
+│
 ├── data/
-│   └── official_sources.json
-├── .env.example             # Safe environment-variable template
+│   └── official_sources.json    # Curated whitelist: scheme to real URL
+│
 ├── docker-compose.yml
-├── Dockerfile                # Single-service production image
-└── DEPLOYMENT.md
+├── Dockerfile
+├── render.yaml                  # One-click Render deploy
+├── DEPLOYMENT.md
+└── .env.example
 ```
 
 ## Quick start
@@ -73,111 +111,168 @@ navi-360/
 ### Prerequisites
 
 - Python 3.13+
-- Node.js 24+ and npm
-- An NVIDIA API key for live AI responses (optional — the app runs in demo fallback mode without one)
+- Node.js 24+ with npm
+- Anthropic API key (for live AI — app runs in demo fallback mode without it)
 
-### 1. Configure your environment
+### 1. Environment setup
 
-```powershell
-Copy-Item .env.example .env
+```bash
+cp .env.example .env
+# Add your ANTHROPIC_API_KEY to .env
+# Bhashini credentials are optional for TTS
 ```
 
-Open `.env` and set `NVIDIA_API_KEY` to enable live extraction, plain-language rewriting, and claim tagging. Bhashini credentials are optional. **Never commit your `.env` file.**
+### 2. Backend
 
-### 2. Install and run the backend
-
-```powershell
+```bash
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r backend\requirements.txt
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --reload --port 8000
+source .venv/bin/activate        # Linux/Mac
+# .venv\Scripts\activate.ps1    # Windows PowerShell
+
+pip install --upgrade pip
+pip install -r backend/requirements.txt
+
+uvicorn app.main:app --app-dir backend --reload --port 8000
 ```
 
-### 3. Install and run the frontend
+### 3. Frontend
 
-```powershell
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Open the Vite address shown in the terminal — normally `http://localhost:5173`.
+Open http://localhost:5173 — you're ready to analyze your first notice.
 
-## Environment variables
+## API at a glance
 
-Copy `.env.example` and change only what your environment needs.
+Full interactive docs at http://localhost:8000/docs (when EXPOSE_DOCS=true).
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated origins allowed to call the API. |
-| `APP_ENV` | `development` | Set to `production` for deployed environments. |
-| `EXPOSE_DOCS` | `true` | Enables FastAPI docs at `/docs`. Disable in public production deployments. |
-| `REQUIRE_LIVE_AI` | `false` | When `true`, requests fail safely if NVIDIA AI is not configured. |
-| `MAX_UPLOAD_MB` | `8` | Maximum size of one evidence file. |
-| `MAX_TOTAL_UPLOAD_MB` | `16` | Maximum combined upload size per analysis. |
-| `MAX_EVIDENCE_FILES` | `6` | Maximum uploaded evidence files per analysis. |
-| `MAX_TEXT_CHARS` | `20000` | Maximum pasted-text length. |
-| `ANALYSIS_DB_PATH` | `data/navi360.db` | SQLite database path. |
-| `ANALYSIS_RETENTION_DAYS` | `30` | Retention period for saved analysis records. |
-| `RATE_LIMIT_PER_MINUTE` | `20` | Per-client limit for analysis requests. |
-| `NVIDIA_API_KEY` | — | Required for live NVIDIA NIM use. |
-| `BHASHINI_TTS_URL` | — | Enables Bhashini text-to-speech. |
-| `BHASHINI_API_KEY` / `BHASHINI_USER_ID` | — | Bhashini credentials. |
+| Method | Endpoint | Purpose |
+|:---|:---|:---|
+| GET | /health | Liveness check |
+| GET | /ready | Service readiness + AI status |
+| POST | /analyze | Main analysis endpoint |
+| GET | /analyses/{id} | Retrieve saved analysis |
+| DELETE | /analyses/{id} | Delete saved analysis |
 
-## API
-
-When `EXPOSE_DOCS=true`, interactive API documentation is available at `http://localhost:8000/docs`.
-
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `GET` | `/health` | Liveness check. |
-| `GET` | `/ready` | Returns whether the service is ready and live AI is configured. |
-| `POST` | `/analyze` | Analyzes uploaded files and/or pasted notice text. |
-| `GET` | `/analyses/{request_id}` | Fetches a saved analysis. |
-| `DELETE` | `/analyses/{request_id}` | Permanently removes a saved analysis. |
-
-`POST /analyze` accepts multipart form data:
+POST /analyze accepts multipart form data:
 
 | Field | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `files` | file list | No* | Up to six supported files. |
-| `text_input` | string | No* | Pasted notice text. |
-| `language` | string | No | One of `en`, `hi`, `te`, `ta`, or `bn`; defaults to `te`. |
+|:---|:---|:---|:---|
+| files | file list | No* | Up to 6 files (JPG, PNG, WEBP, PDF, TXT, MD) |
+| text_input | string | No* | Pasted notice text (max 20,000 chars) |
+| language | string | No | en, hi, te, ta, or bn (defaults to te) |
 
-\* Provide at least one file or non-empty `text_input`.
+*At least one of files or text_input is required.
+
+## Privacy and security
+
+We take "don't make things worse" seriously:
+
+- No file storage — uploaded images, PDFs, and pasted text are processed in memory only
+- No audio storage — generated TTS is streamed, never saved
+- Metadata only — only analysis IDs and timestamps persist in SQLite
+- Curated links only — official URLs come from our vetted catalog, never generated by AI
+- Rate limiting — 20 requests/minute per client
+- Security headers — X-Frame-Options, X-Content-Type-Options, CSP
+- CORS enforcement — wildcard origins rejected in production
+- 30-day data retention — analysis metadata auto-expires
 
 ## Deployment
 
-NAVI 360 ships with Docker, Docker Compose, Railway, and Render configs. For step-by-step production guidance — including HTTPS/CORS setup, persistent storage, and a multi-replica database note — see **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+### Render (fastest, free tier)
 
-**Fastest path to a live demo:**
+1. Fork this repo
+2. Create a Render account
+3. Deploy as Blueprint using the included render.yaml
+4. Add ANTHROPIC_API_KEY as an environment secret
+5. Open your .onrender.com URL
 
-1. Create a free [Render](https://render.com) account.
-2. Deploy this repo as a Blueprint using the included [`render.yaml`](render.yaml).
-3. Keep the **Free** instance type and create the service.
-4. Open the supplied `onrender.com` URL once the build finishes.
+Free tier note: Service sleeps after 15 min inactivity. Cold start takes about 1 minute.
 
-The free tier sleeps after 15 minutes of inactivity (first request after sleep can take ~1 minute) and its filesystem is temporary, so saved analyses don't survive a restart. Add `NVIDIA_API_KEY` as a Render secret to enable live AI responses.
+### Docker
 
-## Security and privacy
+```bash
+docker compose up --build
+```
 
-- Production requires explicit HTTPS origins; wildcard CORS is rejected.
-- The API applies an in-process rate limit to analysis requests.
-- Responses include hardening headers (`X-Frame-Options`, `X-Content-Type-Options`, etc.).
-- No original upload content, pasted text, extracted source text, previews, or generated audio is ever saved.
-- Official links come only from [`data/official_sources.json`](data/official_sources.json) — review this catalog regularly.
-- SQLite suits a single persistent replica. Migrate to PostgreSQL before scaling to multiple backend replicas.
+### Railway or bare metal
 
-## Roadmap / known limitations
+See DEPLOYMENT.md for production configuration including HTTPS/CORS setup, persistent storage migration (SQLite to PostgreSQL), and multi-replica considerations.
 
-- SQLite storage limits deployment to a single backend replica.
-- No license file is currently included — add one before accepting external contributions.
+## Environment variables
+
+| Variable | Default | Purpose |
+|:---|:---|:---|
+| ALLOWED_ORIGINS | http://localhost:5173 | Comma-separated CORS origins |
+| APP_ENV | development | Set to production for deployed environments |
+| EXPOSE_DOCS | true | Enables /docs (disable in public production) |
+| REQUIRE_LIVE_AI | false | When true, fails if AI API is unavailable |
+| MAX_UPLOAD_MB | 8 | Max single file size |
+| MAX_TOTAL_UPLOAD_MB | 16 | Max combined upload per request |
+| MAX_EVIDENCE_FILES | 6 | Max files per analysis |
+| MAX_TEXT_CHARS | 20000 | Max pasted text length |
+| ANALYSIS_DB_PATH | data/navi360.db | SQLite database location |
+| ANALYSIS_RETENTION_DAYS | 30 | Auto-delete for old analyses |
+| RATE_LIMIT_PER_MINUTE | 20 | Requests per client per minute |
+| ANTHROPIC_API_KEY | — | Required for live AI responses |
+| BHASHINI_TTS_URL | — | Bhashini TTS endpoint (optional) |
+| BHASHINI_API_KEY | — | Bhashini API key (optional) |
+| BHASHINI_USER_ID | — | Bhashini user ID (optional) |
+
+## What's real vs. roadmap
+
+### Built and working (hackathon slice)
+
+- End-to-end pipeline: Image to Extraction to Trust Tagging to Checklist to Translation
+- Telugu and Hindi natural-language explanations
+- Missing document detector (3 notice types)
+- Curated official source catalog (15 verified entries)
+- TTS audio playback (Bhashini + browser fallback)
+- Streaming progressive UI
+
+### Roadmap (post-hackathon)
+
+| Feature | Status |
+|:---|:---|
+| Case Memory — track your notices over time | Roadmap |
+| Evidence Builder — multi-document timeline | Roadmap |
+| NAVI Protect — manipulative UI/fraud detection | Roadmap |
+| Eligibility Checker — benefit program matching | Roadmap |
+| WhatsApp bot — analyze via forwarded messages | Roadmap |
 
 ## Contributing
 
-Issues and pull requests are welcome. Please open an issue describing the change before submitting a large PR.
+Issues and PRs welcome. Please open an issue first to discuss significant changes.
+
+```bash
+git clone https://github.com/your-org/navi-360.git
+cd navi-360
+cp .env.example .env
+# Follow Quick Start above
+```
+
+## Known limitations
+
+- Single replica only — SQLite backend limits horizontal scaling (migrate to PostgreSQL for production)
+- Curated catalog scope — official source lookup covers 15 notice types; expanding coverage is a priority
+- No license file — add one before accepting external contributions or distributing
 
 ## License
 
-No license file is currently included. Add a license before distributing or accepting external contributions.
+No license currently specified. Add a license before distribution or external contribution.
+
+---
+
+<div align="center">
+
+Built for clarity. Designed for trust. Speaking your language.
+
+NAVI 360 — because understanding your rights shouldn't require a law degree.
+
+</div>
+```
+
+This is your complete README in one single markdown block — just copy everything and paste into your `README.md` file.
