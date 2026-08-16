@@ -728,6 +728,113 @@ footer { display: flex; padding: 24px 0; border-top: 1px solid #d9ddd4; justify-
   font-style: italic;
 }
 
+/* ─── Settings View ─────────────────────────────────────────── */
+.settings-view-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1000px;
+}
+.settings-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+.settings-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.settings-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
+}
+.card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.card-title-row h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+.profile-details-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.profile-details-row p {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+.profile-details-row p strong {
+  color: #1e293b;
+}
+.settings-action-btn {
+  padding: 8px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #2b6bf3;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.settings-action-btn:hover {
+  background: #f0f5ff;
+  border-color: #2b6bf3;
+}
+.language-select-row {
+  max-width: 220px;
+}
+.settings-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: 14px;
+  color: #1e293b;
+  outline: none;
+  cursor: pointer;
+}
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #334155;
+  cursor: pointer;
+}
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #2b6bf3;
+  cursor: pointer;
+}
+.privacy-note-text {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+
 .placeholder-view {
   background: #ffffff;
   border: 1px solid #e2e8f0;

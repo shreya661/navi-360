@@ -5,6 +5,7 @@ import HistoryDrawer from './components/HistoryDrawer'
 import LanguageToggle from './components/LanguageToggle'
 import NaviProtectView from './components/NaviProtectView'
 import SearchPanel from './components/SearchPanel'
+import SettingsView from './components/SettingsView'
 import Sidebar from './components/Sidebar'
 import TopNav from './components/TopNav'
 import UploadPanel from './components/UploadPanel'
@@ -143,13 +144,12 @@ export default function App() {
           )}
 
           {activeView === 'settings' && (
-            <div className="placeholder-view">
-              <h2>System Settings</h2>
-              <p>Configure custom NVIDIA NIM keys, preferred translation languages, and local storage retention.</p>
-              <button type="button" className="primary-button inline-button" onClick={() => setIsAuthOpen(true)}>
-                Account & Credentials Settings
-              </button>
-            </div>
+            <SettingsView
+              user={user}
+              onOpenAuth={() => setIsAuthOpen(true)}
+              language={language}
+              setLanguage={setLanguage}
+            />
           )}
         </main>
       </div>

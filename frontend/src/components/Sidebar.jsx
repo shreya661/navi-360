@@ -1,6 +1,7 @@
 export default function Sidebar({ activeView, setActiveView, user, onOpenAuth, casesCount = 3, remindersCount = 2 }) {
-  const displayName = user?.name || 'shreyapatha'
+  const displayName = user?.name || (user?.email ? user.email.split('@')[0] : 'Sign In')
   const initial = displayName.charAt(0).toUpperCase()
+  const displaySub = user?.email || (user?.name ? 'Personal Account' : 'Click to set up profile')
 
   return (
     <aside className="app-sidebar" aria-label="Main Navigation">
@@ -93,7 +94,7 @@ export default function Sidebar({ activeView, setActiveView, user, onOpenAuth, c
         <div className="profile-avatar">{initial}</div>
         <div className="profile-info">
           <span className="profile-name">{displayName}</span>
-          <span className="profile-sub">{user?.email || 'Personal Account'}</span>
+          <span className="profile-sub">{displaySub}</span>
         </div>
       </div>
     </aside>
