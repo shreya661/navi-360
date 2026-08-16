@@ -10,7 +10,6 @@ export default function AnalysisView({ result, onStartOver }) {
   const { notice, plain_explanation: explanation, claims, evidence, timeline, missing_information: checklist, official_source: source, safe_next_step: nextStep } = result
   return (
     <div className="analysis-layout">
-      {result.is_demo && <div className="demo-banner"><span>Demo mode</span> Add an NVIDIA NIM key to read a real uploaded notice. This preview shows the complete NAVI flow.</div>}
       <section className="result-panel explanation" aria-labelledby="explanation-title">
         <div className="panel-heading">
           <div className="section-number">02</div>
