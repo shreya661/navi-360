@@ -1,11 +1,21 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function AuthModal({ isOpen, onClose, user, onSaveUser }) {
-  const [name, setName] = useState(user?.name || '')
-  const [email, setEmail] = useState(user?.email || '')
-  const [apiKey, setApiKey] = useState(user?.apiKey || '')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [apiKey, setApiKey] = useState('')
+
+  // Sync fields whenever the modal opens or the active user changes
+  useEffect(() => {
+    if (isOpen) {
+      setName(user?.name || '')
+      setEmail(user?.email || '')
+      setApiKey(user?.apiKey || '')
+    }
+  }, [isOpen, user])
 
   if (!isOpen) return null
+
 
   function handleSubmit(event) {
     event.preventDefault()

@@ -3,20 +3,6 @@ import { useRef, useState } from 'react'
 const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'text/plain', 'text/markdown']
 const MAX_FILES = 6
 const MAX_SIZE = 8 * 1024 * 1024
-const EXAMPLES = [
-  {
-    label: 'Scholarship notice',
-    text: 'Post-Matric Scholarship applications for 2026–27 are open. Eligible students must submit income certificate, caste certificate, bank passbook, and institution bonafide certificate by 30 September 2026.',
-  },
-  {
-    label: 'PM-KISAN update',
-    text: 'PM-KISAN beneficiary notice: complete e-KYC and verify your Aadhaar-linked bank account before 30 September 2026 to avoid interruption of benefits.',
-  },
-  {
-    label: 'e-Shram notice',
-    text: 'e-Shram registration update: unorganised workers should confirm their Aadhaar, mobile number, and occupation details using the official portal.',
-  },
-]
 
 export default function UploadPanel({ onAnalyze, loading }) {
   const inputRef = useRef(null)
@@ -55,11 +41,6 @@ export default function UploadPanel({ onAnalyze, loading }) {
     onAnalyze(files, textInput)
   }
 
-  function useExample(example) {
-    setFiles([])
-    setTextInput(example.text)
-    setError('')
-  }
 
   return (
     <section className="upload-card" aria-labelledby="upload-title">
@@ -109,10 +90,7 @@ export default function UploadPanel({ onAnalyze, loading }) {
         <textarea id="evidence-text" value={textInput} maxLength={20000} onChange={(event) => setTextInput(event.target.value)} placeholder="Paste the text here…" disabled={loading} />
         <small>{textInput.length.toLocaleString()} / 20,000 characters</small>
       </label>
-      <div className="sample-examples" aria-label="Try a sample notice">
-        <span>Try a privacy-safe example</span>
-        <div>{EXAMPLES.map((example) => <button type="button" key={example.label} onClick={() => useExample(example)} disabled={loading}>{example.label}</button>)}</div>
-      </div>
+
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="primary-button" disabled={loading} onClick={submit}>
         {loading ? 'Reading your evidence…' : 'Understand this situation'}
