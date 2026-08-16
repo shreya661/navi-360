@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import AnalysisView from './components/AnalysisView'
 import AuthModal from './components/AuthModal'
 import HistoryDrawer from './components/HistoryDrawer'
 import LanguageToggle from './components/LanguageToggle'
+import NaviProtectView from './components/NaviProtectView'
 import SearchPanel from './components/SearchPanel'
+import Sidebar from './components/Sidebar'
+import TopNav from './components/TopNav'
 import UploadPanel from './components/UploadPanel'
 import { useAnalyzeDocument } from './hooks/useAnalyzeDocument'
 
 export default function App() {
+  const [activeView, setActiveView] = useState('protect') // Default active view matching user's screenshot
   const [language, setLanguage] = useState('te')
   const { status, stage, stages, result, error, analyze, reset, loadResult } = useAnalyzeDocument()
   const loading = status === 'loading'
@@ -64,55 +68,91 @@ export default function App() {
   }
 
   return (
-    <main>
-      <header className="site-header">
-        <a className="brand" href="/" aria-label="NAVI 360 home">
-          <span className="brand-mark">N</span>
-          <span>NAVI <em>360</em></span>
-        </a>
-        <div className="header-actions">
-          <button
-            type="button"
-            className="header-button"
-            onClick={() => setIsHistoryOpen(true)}
-            aria-label="View history"
-          >
-            📋 History ({history.length})
-          </button>
-          <button
-            type="button"
-            className="header-button primary-header-button"
-            onClick={() => setIsAuthOpen(true)}
-            aria-label="Account settings"
-          >
-            👤 {user ? user.name : 'Sign In'}
-          </button>
-        </div>
-      </header>
+    <div className="dashboard-layout">
+      {/* Left Sidebar */}
+      <Sidebar
+        activeView={activeView}
+        setActiveView={setActiveView}
+        user={user}
+        onOpenAuth={() => setIsAuthOpen(true)}
+        casesCount={history.length > 0 ? history.length : 3}
+        remindersCount={2}
+      />
 
-      {result ? (
-        <AnalysisView result={result} onStartOver={reset} />
-      ) : (
-        <div className="landing-grid">
-          <section className="hero">
-            <p className="eyebrow"><span className="status-dot" />A simpler way to understand</p>
-            <h1>Every notice,<br /><i>made clear.</i></h1>
-            <p className="hero-copy">Add notices, screenshots, PDFs, receipts, messages, or text. NAVI turns scattered evidence into a clear next step — in your language.</p>
-            <div className="trust-points"><span>✦ Evidence-aware</span><span>◌ Official links only</span><span>◒ Audio when ready</span></div>
-          </section>
-          <div className="action-column">
-            <LanguageToggle language={language} onChange={setLanguage} disabled={loading} />
-            <UploadPanel onAnalyze={handleAnalyze} loading={loading} />
-            {loading && (
-              <div className="progress-card" role="status" aria-live="polite">
-                {stages.map((item, index) => <span className={index <= stage ? 'progress-step active' : 'progress-step'} key={item}><b>{index < stage ? '✓' : index + 1}</b>{item}</span>)}
+      {/* Main Content Area */}
+      <div className="dashboard-main">
+        {/* Top Header */}
+        <TopNav
+          activeView={activeView}
+          user={user}
+          onOpenAuth={() => setIsAuthOpen(true)}
+        />
+
+        {/* Content View Switching */}
+        <main className="dashboard-body">
+          {activeView === 'protect' && <NaviProtectView />}
+
+          {(activeView === 'civic' || activeView === 'home') && (
+            result ? (
+              <AnalysisView result={result} onStartOver={reset} />
+            ) : (
+              <div className="landing-grid">
+                <section className="hero">
+                  <p className="eyebrow"><span className="status-dot" />NAVI Civic Service</p>
+                  <h1>Every notice,<br /><i>made clear.</i></h1>
+                  <p className="hero-copy">Add notices, screenshots, PDFs, receipts, messages, or text. NAVI turns scattered evidence into a clear next step — in your language.</p>
+                  <div className="trust-points"><span>✦ Evidence-aware</span><span>◌ Official links only</span><span>◒ Audio when ready</span></div>
+                </section>
+                <div className="action-column">
+                  <LanguageToggle language={language} onChange={setLanguage} disabled={loading} />
+                  <UploadPanel onAnalyze={handleAnalyze} loading={loading} />
+                  {loading && (
+                    <div className="progress-card" role="status" aria-live="polite">
+                      {stages.map((item, index) => <span className={index <= stage ? 'progress-step active' : 'progress-step'} key={item}><b>{index < stage ? '✓' : index + 1}</b>{item}</span>)}
+                    </div>
+                  )}
+                  {error && <div className="request-error" role="alert"><strong>That did not work.</strong><span>{error}</span><button onClick={reset}>Try again</button></div>}
+                </div>
+                <SearchPanel />
               </div>
-            )}
-            {error && <div className="request-error" role="alert"><strong>That did not work.</strong><span>{error}</span><button onClick={reset}>Try again</button></div>}
-          </div>
-          <SearchPanel />
-        </div>
-      )}
+            )
+          )}
+
+          {activeView === 'cases' && (
+            <div className="placeholder-view">
+              <h2>My Cases ({history.length})</h2>
+              <p>Your recent document and notice analyses.</p>
+              <button type="button" className="primary-button inline-button" onClick={() => setIsHistoryOpen(true)}>
+                Open History Drawer
+              </button>
+            </div>
+          )}
+
+          {activeView === 'evidence' && (
+            <div className="placeholder-view">
+              <h2>Evidence Vault</h2>
+              <p>Upload and organize document evidence securely.</p>
+            </div>
+          )}
+
+          {activeView === 'reminders' && (
+            <div className="placeholder-view">
+              <h2>Active Reminders</h2>
+              <p>Deadline trackers for post-matric scholarships, tax notices, and bill due dates.</p>
+            </div>
+          )}
+
+          {activeView === 'settings' && (
+            <div className="placeholder-view">
+              <h2>System Settings</h2>
+              <p>Configure custom NVIDIA NIM keys, preferred translation languages, and local storage retention.</p>
+              <button type="button" className="primary-button inline-button" onClick={() => setIsAuthOpen(true)}>
+                Account & Credentials Settings
+              </button>
+            </div>
+          )}
+        </main>
+      </div>
 
       <AuthModal
         isOpen={isAuthOpen}
@@ -128,9 +168,6 @@ export default function App() {
         onSelectAnalysis={(item) => loadResult(item)}
         onClearHistory={clearHistory}
       />
-
-      <footer><span>Built to help you understand — not to decide for you.</span><span>© 2026 NAVI 360</span></footer>
-    </main>
+    </div>
   )
 }
-
