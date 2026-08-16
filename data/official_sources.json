@@ -1,57 +1,77 @@
 {
+  "telangana_epass": {
+    "name": "Telangana ePASS Scholarship Portal",
+    "url": "https://telanganaepass.cgg.gov.in/",
+    "reason": "Use the official Government of Telangana ePASS portal to check Post-Matric and Pre-Matric scholarship eligibility and application status."
+  },
+  "ap_epass": {
+    "name": "Andhra Pradesh JnanaBhumi Portal",
+    "url": "https://jnanabhumi.ap.gov.in/",
+    "reason": "Use the official AP JnanaBhumi portal for post-matric fee reimbursement and scholarship applications."
+  },
+  "up_scholarship": {
+    "name": "UP Scholarship & Fee Reimbursement Portal",
+    "url": "https://scholarship.up.gov.in/",
+    "reason": "Use the official Uttar Pradesh scholarship portal for state student welfare schemes."
+  },
+  "mahadbt": {
+    "name": "MahaDBT Scholarship Portal",
+    "url": "https://mahadbt.maharashtra.gov.in/",
+    "reason": "Use the official Government of Maharashtra MahaDBT portal for state scholarships."
+  },
   "scholarship": {
     "name": "National Scholarship Portal",
     "url": "https://scholarships.gov.in/",
-    "reason": "Use the official Government of India portal to check the current scheme, documents, deadline, and application status."
+    "reason": "Use the official Government of India portal to check current national scholarship schemes, documents, and application status."
   },
   "tax_notice": {
     "name": "Income Tax e-Filing Portal",
     "url": "https://www.incometax.gov.in/iec/foportal/",
-    "reason": "Use the official Income Tax Department portal to verify a tax communication and respond securely."
+    "reason": "Use the official Income Tax Department portal to verify tax communications, respond to notices, or check refund status."
   },
   "utility_bill": {
-    "name": "National Portal of India",
-    "url": "https://www.india.gov.in/",
-    "reason": "Use the official national portal to find your state electricity provider; do not pay through a link in an unverified message."
+    "name": "National Portal of India — Electricity & Utilities",
+    "url": "https://www.india.gov.in/topics/electricity",
+    "reason": "Use the official national portal to locate your state power distribution provider (DISCOM); avoid clicking payment links in unsolicited SMS/WhatsApp messages."
   },
   "farmer_support": {
-    "name": "PM-KISAN Samman Nidhi",
+    "name": "PM-KISAN Samman Nidhi Portal",
     "url": "https://pmkisan.gov.in/",
-    "reason": "Use the official Department of Agriculture portal to check beneficiary status, e-KYC, and scheme notices."
+    "reason": "Use the official Department of Agriculture portal to check beneficiary status, complete e-KYC, and verify instalment releases."
   },
   "labour": {
-    "name": "e-Shram Portal",
+    "name": "e-Shram National Database of Unorganised Workers",
     "url": "https://www.eshram.gov.in/",
-    "reason": "Use the official Ministry of Labour portal for e-Shram registration, updates, and helpdesk support."
+    "reason": "Use the official Ministry of Labour portal for e-Shram card registration, updates, and social security scheme details."
   },
   "health_scheme": {
-    "name": "National Health Authority",
+    "name": "National Health Authority (Ayushman Bharat)",
     "url": "https://nha.gov.in/",
-    "reason": "Use the official National Health Authority website to verify Ayushman Bharat and PM-JAY information."
+    "reason": "Use the official NHA portal to check Ayushman Card eligibility, empaneled hospitals, and PM-JAY coverage."
   },
   "pension": {
-    "name": "Pension Fund Regulatory and Development Authority",
+    "name": "PFRDA & National Pension System (NPS)",
     "url": "https://www.pfrda.org.in/",
-    "reason": "Use the official PFRDA website to verify pension and National Pension System notices."
+    "reason": "Use the official PFRDA website to verify pension schemes, PRAN status, and NPS contributions."
   },
   "identity_document": {
-    "name": "myAadhaar",
+    "name": "myAadhaar — UIDAI Portal",
     "url": "https://myaadhaar.uidai.gov.in/",
-    "reason": "Use the official UIDAI portal for Aadhaar services; never share an OTP with an unverified caller or site."
+    "reason": "Use the official UIDAI portal for Aadhaar updates and enrolment status; never share OTPs with unverified calls."
   },
   "education_admission": {
-    "name": "University Grants Commission",
+    "name": "University Grants Commission (UGC)",
     "url": "https://www.ugc.gov.in/",
-    "reason": "Use the official UGC website to verify higher-education notices and student services."
+    "reason": "Use the official UGC portal to verify university recognitions, entrance announcements, and academic notices."
   },
   "grievance": {
-    "name": "CPGRAMS Public Grievance Portal",
+    "name": "CPGRAMS Public Grievance Redressal Portal",
     "url": "https://pgportal.gov.in/",
-    "reason": "Use the official Government of India grievance portal to lodge or track a public grievance."
+    "reason": "Use the official Centralized Public Grievance Redress and Monitoring System to file or track grievances with any department."
   },
   "general_notice": {
     "name": "National Portal of India",
     "url": "https://www.india.gov.in/",
-    "reason": "Use this official Government of India portal to identify the responsible department before taking action."
+    "reason": "Use the official Government of India portal to verify department details before taking action on any notice."
   }
 }

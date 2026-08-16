@@ -14,10 +14,11 @@ class LLMUnavailable(Exception):
 
 
 async def chat_json(
-    *, system_prompt: str, user_content: list[dict[str, Any]], model: str, temperature: float
+    *, system_prompt: str, user_content: list[dict[str, Any]], model: str, temperature: float, api_key: str | None = None
 ) -> dict[str, Any]:
     settings = get_settings()
-    if not settings.nvidia_api_key:
+    effective_key = api_key or settings.nvidia_api_key
+    if not effective_key:
         raise LLMUnavailable("NVIDIA_API_KEY is not configured")
 
     payload = {
@@ -30,7 +31,7 @@ async def chat_json(
         ],
     }
     headers = {
-        "Authorization": f"Bearer {settings.nvidia_api_key}",
+        "Authorization": f"Bearer {effective_key}",
         "Content-Type": "application/json",
     }
     async with httpx.AsyncClient(timeout=55) as client:

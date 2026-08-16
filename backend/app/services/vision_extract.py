@@ -23,15 +23,31 @@ DEMO_NOTICE = ExtractedNotice(
 )
 
 
+IMAGE_FALLBACK_NOTICE = ExtractedNotice(
+    title="Uploaded Notice Image",
+    issuer="Uploaded Document",
+    notice_type="general_notice",
+    deadline=None,
+    audience="Recipient",
+    extracted_text="Notice photo received. Add an NVIDIA NIM key or sign in with your API key to enable live vision AI extraction for images.",
+)
+
+
 async def extract_notice(
     image: bytes | None,
     content_type: str | None,
     supporting_text: str = "",
+    api_key: str | None = None,
 ) -> tuple[ExtractedNotice, bool]:
     """Extract an evidence-grounded notice from an image, text, or both."""
     settings = get_settings()
-    if not settings.nvidia_api_key:
-        return (_fallback_from_text(supporting_text), True) if supporting_text else (DEMO_NOTICE, True)
+    effective_key = api_key or settings.nvidia_api_key
+    if not effective_key:
+        if supporting_text:
+            return (_fallback_from_text(supporting_text), True)
+        if image:
+            return (IMAGE_FALLBACK_NOTICE, True)
+        return (DEMO_NOTICE, True)
 
     user_content = []
     if supporting_text:
@@ -55,6 +71,7 @@ async def extract_notice(
         user_content=user_content,
         model=settings.vision_model,
         temperature=0.2,
+        api_key=effective_key,
     )
     try:
         return ExtractedNotice.model_validate(result), False

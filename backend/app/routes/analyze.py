@@ -3,7 +3,7 @@ from __future__ import annotations
 from uuid import uuid4
 
 import httpx
-from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile, status
+from fastapi import APIRouter, File, Form, Header, HTTPException, Response, UploadFile, status
 
 from ..models.schemas import AnalysisResponse, AudioSegment, LanguageCode
 from ..services.classify_notice import classify_notice
@@ -31,9 +31,11 @@ async def analyze_notice(
     files: list[UploadFile] = File(default=[]),
     text_input: str = Form(""),
     language: LanguageCode = Form("te"),
+    x_nvidia_api_key: str | None = Header(default=None),
 ) -> AnalysisResponse:
     settings = get_settings()
-    if settings.require_live_ai and not settings.nvidia_api_key:
+    effective_api_key = x_nvidia_api_key or settings.nvidia_api_key
+    if settings.require_live_ai and not effective_api_key:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Live AI is not configured. Contact the service administrator.")
     if not files and not text_input.strip():
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Add at least one file or paste the notice text.")
@@ -68,10 +70,11 @@ async def analyze_notice(
             image_evidence.image_bytes if image_evidence else None,
             image_evidence.content_type if image_evidence else None,
             text_evidence,
+            api_key=effective_api_key,
         )
         notice_type = classify_notice(notice)
         notice.notice_type = notice_type
-        explanation = await rewrite_for_language(notice, language)
+        explanation = await rewrite_for_language(notice, language, api_key=effective_api_key)
         try:
             audio_url = await synthesize(explanation, language)
         except httpx.HTTPError:
@@ -83,7 +86,7 @@ async def analyze_notice(
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(error)) from error
 
-    source = find_official_source(notice_type)
+    source = find_official_source(notice_type, notice.title, text_evidence)
     deadline = f" before {notice.deadline}" if notice.deadline else ""
     response = AnalysisResponse(
         request_id=str(uuid4()),
@@ -92,7 +95,7 @@ async def analyze_notice(
         notice=notice,
         summary=f"{notice.title}{deadline}.",
         plain_explanation=explanation,
-        claims=await tag_claims(notice),
+        claims=await tag_claims(notice, api_key=effective_api_key),
         evidence=[source.item for source in evidence],
         timeline=build_timeline(evidence),
         missing_information=build_checklist(notice, notice_type),

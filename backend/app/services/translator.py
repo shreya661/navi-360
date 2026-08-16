@@ -4,6 +4,7 @@ from ..models.schemas import ExtractedNotice, LanguageCode
 from .llm_client import LLMUnavailable, chat_json
 from .prompts import load_prompt
 from .settings import get_settings
+from .vision_extract import DEMO_NOTICE
 
 
 FALLBACKS: dict[str, str] = {
@@ -28,13 +29,15 @@ FALLBACKS: dict[str, str] = {
 }
 
 
-async def rewrite_for_language(notice: ExtractedNotice, language: LanguageCode) -> str:
+async def rewrite_for_language(notice: ExtractedNotice, language: LanguageCode, api_key: str | None = None) -> str:
     settings = get_settings()
-    if not settings.nvidia_api_key:
-        if notice.notice_type != "scholarship":
-            deadline = f" The document mentions {notice.deadline}." if notice.deadline else ""
-            return f"NAVI found this {notice.notice_type.replace('_', ' ')}: {notice.title}.{deadline} Please verify the details on the official source before acting."
-        return FALLBACKS[language]
+    effective_key = api_key or settings.nvidia_api_key
+    if not effective_key:
+        if notice.extracted_text and notice.title != DEMO_NOTICE.title:
+            deadline = f" The notice mentions a deadline of {notice.deadline}." if notice.deadline else ""
+            summary = notice.extracted_text[:280].strip()
+            return f"NAVI extracted this notice ({notice.title}): {summary}.{deadline} Please check the official source for full verification."
+        return FALLBACKS.get(language, FALLBACKS["en"])
 
     result = await chat_json(
         system_prompt=load_prompt("natural_rewrite.txt").replace("{{language}}", language),
@@ -49,5 +52,6 @@ async def rewrite_for_language(notice: ExtractedNotice, language: LanguageCode) 
         ],
         model=settings.text_model,
         temperature=0.75,
+        api_key=effective_key,
     )
-    return str(result.get("plain_explanation") or FALLBACKS[language]).strip()
+    return str(result.get("plain_explanation") or FALLBACKS.get(language, FALLBACKS["en"])).strip()

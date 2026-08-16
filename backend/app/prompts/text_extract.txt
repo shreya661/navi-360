@@ -4,7 +4,7 @@ Return JSON only with this exact shape:
 {
   "title": "string",
   "issuer": "string or null",
-  "notice_type": "scholarship | tax_notice | utility_bill | general_notice",
+  "notice_type": "scholarship | tax_notice | utility_bill | farmer_support | labour | health_scheme | pension | identity_document | education_admission | grievance | general_notice",
   "deadline": "string or null",
   "audience": "string or null",
   "extracted_text": "verbatim useful text from the supplied evidence"

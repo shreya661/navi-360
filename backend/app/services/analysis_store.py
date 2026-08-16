@@ -15,7 +15,7 @@ def _database_path() -> Path:
     configured = Path(get_settings().analysis_db_path)
     if configured.is_absolute():
         return configured
-    return Path(__file__).resolve().parents[3] / configured
+    return Path.cwd() / configured
 
 
 def _connection() -> sqlite3.Connection:

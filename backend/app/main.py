@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .routes.analyze import router as analyze_router
+from .routes.search import router as search_router
 from .services.settings import get_settings
 from .services.rate_limit import RateLimiter
 
@@ -25,16 +26,19 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.origins,
     allow_credentials=False,
-    allow_methods=["POST", "GET", "DELETE"],
-    allow_headers=["Content-Type"],
+    allow_methods=["POST", "GET", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
 )
 app.include_router(analyze_router)
+app.include_router(analyze_router, prefix="/api", include_in_schema=False)
+app.include_router(search_router)
+app.include_router(search_router, prefix="/api", include_in_schema=False)
 
 
 @app.middleware("http")
 async def protect_api(request: Request, call_next):
     request_id = str(uuid4())
-    if request.url.path == "/analyze":
+    if request.url.path in ("/analyze", "/api/analyze"):
         client_ip = request.client.host if request.client else "unknown"
         if not limiter.allow(client_ip):
             return JSONResponse(
@@ -54,11 +58,13 @@ async def protect_api(request: Request, call_next):
 
 
 @app.get("/health")
+@app.get("/api/health")
 async def health() -> dict[str, str]:
     return {"status": "ok", "service": "navi-360-api"}
 
 
 @app.get("/ready")
+@app.get("/api/ready")
 async def readiness() -> dict[str, bool]:
     return {"ready": True, "live_ai_configured": bool(settings.nvidia_api_key)}
 

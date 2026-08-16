@@ -21,10 +21,11 @@ def _fallback_claims(notice: ExtractedNotice) -> list[TrustClaim]:
     return claims
 
 
-async def tag_claims(notice: ExtractedNotice) -> list[TrustClaim]:
+async def tag_claims(notice: ExtractedNotice, api_key: str | None = None) -> list[TrustClaim]:
     """Use the reasoning model to label claims without inventing facts."""
     settings = get_settings()
-    if not settings.nvidia_api_key:
+    effective_key = api_key or settings.nvidia_api_key
+    if not effective_key:
         return _fallback_claims(notice)
     prompt = (
         "Create 3 to 6 short, useful claims from this notice. Return JSON with a `claims` array. "
@@ -38,6 +39,7 @@ async def tag_claims(notice: ExtractedNotice) -> list[TrustClaim]:
             user_content=[{"type": "text", "text": f"Title: {notice.title}\nIssuer: {notice.issuer}\nDeadline: {notice.deadline}\nText: {notice.extracted_text}"}],
             model=settings.text_model,
             temperature=0.25,
+            api_key=effective_key,
         )
         claims = [TrustClaim.model_validate(item) for item in result.get("claims", [])]
         return claims or _fallback_claims(notice)
