@@ -94,10 +94,9 @@ async def readiness() -> dict[str, Any]:
     }
 
 
-# Serve static uploads directory if requested
+# Ensure uploads directory exists on disk for authenticated storage
 uploads_dir = Path.cwd() / "data" / "uploads"
 uploads_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/data/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 # Serve React frontend dist bundle in production Docker environment
 frontend_dist = Path(__file__).resolve().parents[1] / "frontend" / "dist"

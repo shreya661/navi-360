@@ -13,7 +13,7 @@ import Sidebar from './components/Sidebar'
 import TopNav from './components/TopNav'
 import UploadPanel from './components/UploadPanel'
 import { useAnalyzeDocument } from './hooks/useAnalyzeDocument'
-import { fetchCases, fetchMe, fetchReminders, getAuthToken, setAuthToken } from './lib/api'
+import { deleteAnalysis, fetchAnalyses, fetchCases, fetchMe, fetchReminders, getAuthToken, setAuthToken } from './lib/api'
 
 export default function App() {
   const [activeView, setActiveView] = useState('protect')
@@ -43,6 +43,12 @@ export default function App() {
       setUser(null)
       setCasesCount(0)
       setRemindersCount(0)
+      try {
+        const saved = localStorage.getItem('navi360_history')
+        setHistory(saved ? JSON.parse(saved) : [])
+      } catch {
+        setHistory([])
+      }
       return
     }
     try {
@@ -67,6 +73,17 @@ export default function App() {
     } catch {
       setRemindersCount(0)
     }
+
+    try {
+      const analyses = await fetchAnalyses()
+      const mapped = (analyses || []).map(a => ({
+        ...a,
+        timestamp: a.created_at || new Date().toISOString()
+      }))
+      setHistory(mapped)
+    } catch {
+      setHistory([])
+    }
   }
 
   useEffect(() => {
@@ -85,7 +102,9 @@ export default function App() {
         const item = { ...res, timestamp: new Date().toISOString() }
         setHistory((prev) => {
           const updated = [item, ...prev.filter((h) => h.request_id !== item.request_id)].slice(0, 20)
-          localStorage.setItem('navi360_history', JSON.stringify(updated))
+          if (!user) {
+            localStorage.setItem('navi360_history', JSON.stringify(updated))
+          }
           return updated
         })
       }
@@ -94,7 +113,14 @@ export default function App() {
     }
   }
 
-  const clearHistory = () => {
+  const clearHistory = async () => {
+    if (user) {
+      try {
+        await Promise.all(history.map((item) => deleteAnalysis(item.request_id)))
+      } catch {
+        // Ignore background deletion errors
+      }
+    }
     setHistory([])
     localStorage.removeItem('navi360_history')
   }
@@ -107,6 +133,7 @@ export default function App() {
         setActiveView={setActiveView}
         user={user}
         onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenHistory={() => setIsHistoryOpen(true)}
         casesCount={casesCount}
         remindersCount={remindersCount}
       />

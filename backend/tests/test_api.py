@@ -149,3 +149,84 @@ def test_analyze_and_store_lifecycle():
     # Confirm deleted
     res_get_deleted = client.get(f"/api/analyses/{request_id}")
     assert res_get_deleted.status_code == 404
+
+
+def test_user_data_isolation():
+    # User A setup
+    email_a = f"usera_{uuid4().hex[:8]}@example.com"
+    reg_a = client.post("/api/auth/register", json={"email": email_a, "password": "password123", "name": "User A"})
+    assert reg_a.status_code == 200
+    token_a = reg_a.json()["token"]
+    headers_a = {"Authorization": f"Bearer {token_a}"}
+
+    # User B setup
+    email_b = f"userb_{uuid4().hex[:8]}@example.com"
+    reg_b = client.post("/api/auth/register", json={"email": email_b, "password": "password123", "name": "User B"})
+    assert reg_b.status_code == 200
+    token_b = reg_b.json()["token"]
+    headers_b = {"Authorization": f"Bearer {token_b}"}
+
+    # User A creates a case
+    res_case_a = client.post("/api/cases", headers=headers_a, json={"title": "User A Private Case", "category": "Tax Notice"})
+    assert res_case_a.status_code == 200
+    case_a_id = res_case_a.json()["id"]
+
+    # User B tries to access User A's case -> 404
+    assert client.get(f"/api/cases/{case_a_id}", headers=headers_b).status_code == 404
+    assert client.delete(f"/api/cases/{case_a_id}", headers=headers_b).status_code == 404
+
+    # User B tries to attach evidence to User A's case -> 404
+    res_cross_ev = client.post(
+        "/api/evidence",
+        headers=headers_b,
+        data={"title": "Sneaky Evidence", "category": "Documents", "text_content": "Test", "case_id": case_a_id},
+    )
+    assert res_cross_ev.status_code == 404
+
+    # User B tries to create reminder on User A's case -> 404
+    res_cross_rem = client.post(
+        "/api/reminders",
+        headers=headers_b,
+        json={"title": "Sneaky Reminder", "due_date": "2026-09-01", "case_id": case_a_id},
+    )
+    assert res_cross_rem.status_code == 404
+
+    # User A creates an analysis
+    res_an_a = client.post("/api/analyze", headers=headers_a, data={"text_input": "Notice for User A", "language": "en"})
+    assert res_an_a.status_code == 200
+    analysis_a_id = res_an_a.json()["request_id"]
+
+    # User B tries to access or delete User A's analysis -> 404
+    assert client.get(f"/api/analyses/{analysis_a_id}", headers=headers_b).status_code == 404
+    assert client.delete(f"/api/analyses/{analysis_a_id}", headers=headers_b).status_code == 404
+
+
+def test_evidence_download():
+    # User A setup
+    email_a = f"evuser_{uuid4().hex[:8]}@example.com"
+    reg_a = client.post("/api/auth/register", json={"email": email_a, "password": "password123", "name": "EV User"})
+    token_a = reg_a.json()["token"]
+    headers_a = {"Authorization": f"Bearer {token_a}"}
+
+    # Upload evidence file
+    files = {"file": ("test_doc.txt", b"Confidential evidence content", "text/plain")}
+    res_up = client.post("/api/evidence", headers=headers_a, data={"title": "Doc"}, files=files)
+    assert res_up.status_code == 200
+    evidence_id = res_up.json()["id"]
+
+    # Owner download -> 200 OK
+    res_down = client.get(f"/api/evidence/{evidence_id}/download", headers=headers_a)
+    assert res_down.status_code == 200
+    assert res_down.content == b"Confidential evidence content"
+
+    # Unauthenticated download -> 401
+    res_unauth = client.get(f"/api/evidence/{evidence_id}/download")
+    assert res_unauth.status_code == 401
+
+    # User B download -> 404
+    email_b = f"evuser_b_{uuid4().hex[:8]}@example.com"
+    reg_b = client.post("/api/auth/register", json={"email": email_b, "password": "password123", "name": "EV User B"})
+    headers_b = {"Authorization": f"Bearer {reg_b.json()['token']}"}
+    res_cross_down = client.get(f"/api/evidence/{evidence_id}/download", headers=headers_b)
+    assert res_cross_down.status_code == 404
+

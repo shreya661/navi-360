@@ -1,4 +1,4 @@
-export default function Sidebar({ activeView, setActiveView, user, onOpenAuth, casesCount = 0, remindersCount = 0 }) {
+export default function Sidebar({ activeView, setActiveView, user, onOpenAuth, onOpenHistory, casesCount = 0, remindersCount = 0 }) {
   const displayName = user?.name || (user?.email ? user.email.split('@')[0] : 'Sign In')
   const initial = displayName.charAt(0).toUpperCase()
   const displaySub = user?.email || (user?.name ? 'Personal Account' : 'Click to set up profile')
@@ -50,6 +50,14 @@ export default function Sidebar({ activeView, setActiveView, user, onOpenAuth, c
             <span className="nav-icon">⏰</span>
             <span className="nav-label">Reminders</span>
             {remindersCount > 0 && <span className="nav-badge alert-badge">{remindersCount}</span>}
+          </button>
+          <button
+            type="button"
+            className="nav-item"
+            onClick={onOpenHistory}
+          >
+            <span className="nav-icon">📜</span>
+            <span className="nav-label">Notice History</span>
           </button>
         </div>
 

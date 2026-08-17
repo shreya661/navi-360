@@ -73,7 +73,14 @@ async def create_reminder(
     reminder_id = str(uuid4())
     now = datetime.now(UTC).isoformat()
 
+    clean_case_id = req.case_id.strip() if req.case_id and req.case_id.strip() else None
+
     with get_db_connection() as conn:
+        if clean_case_id:
+            case_check = conn.execute("SELECT id FROM cases WHERE id = ? AND user_id = ?", (clean_case_id, user_id)).fetchone()
+            if not case_check:
+                raise HTTPException(status_code=404, detail="Case not found or access denied.")
+
         conn.execute(
             """
             INSERT INTO reminders (id, user_id, case_id, title, description, due_date, status, priority, created_at)
@@ -82,7 +89,7 @@ async def create_reminder(
             (
                 reminder_id,
                 user_id,
-                req.case_id if req.case_id and req.case_id.strip() else None,
+                clean_case_id,
                 req.title.strip(),
                 req.description.strip(),
                 req.due_date.strip(),

@@ -60,6 +60,9 @@ async function request(path, options = {}) {
       payload = {}
     }
     if (!response.ok) {
+      if (response.status === 401) {
+        setAuthToken(null)
+      }
       const msg = payload.detail || payload.message || 'Request failed. Please try again.'
       throw new Error(msg)
     }
@@ -86,6 +89,14 @@ export async function analyzeDocument(files, textInput, language, customApiKey =
 
   const headers = getHeaders(customApiKey, false)
   return request('/api/analyze', { method: 'POST', body, headers })
+}
+
+export async function fetchAnalyses() {
+  return request('/api/analyses', { method: 'GET', headers: getHeaders() })
+}
+
+export async function deleteAnalysis(requestId) {
+  return request(`/api/analyses/${requestId}`, { method: 'DELETE', headers: getHeaders() })
 }
 
 // Search API
@@ -173,6 +184,23 @@ export async function uploadEvidence({ file, text_content, title, category, case
 
   const headers = getHeaders(null, false)
   return request('/api/evidence', { method: 'POST', body, headers })
+}
+
+export async function downloadEvidenceFile(id, fileName) {
+  const url = `${API_URL}/api/evidence/${id}/download`
+  const response = await fetch(url, { method: 'GET', headers: getHeaders() })
+  if (!response.ok) {
+    throw new Error('Failed to download evidence file.')
+  }
+  const blob = await response.blob()
+  const downloadUrl = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = downloadUrl
+  link.download = fileName || 'evidence_file'
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(downloadUrl)
 }
 
 export async function deleteEvidence(id) {

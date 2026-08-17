@@ -7,9 +7,11 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from ..services.database import get_db_connection
+from ..services.settings import get_settings
 from .auth import require_auth_user_id
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
@@ -71,17 +73,35 @@ async def upload_evidence(
     if not file and not text_content.strip():
         raise HTTPException(status_code=422, detail="Please upload a file or paste text content.")
 
+    settings = get_settings()
+
+    # Validate case ownership if case_id provided
+    clean_case_id = case_id.strip() if case_id and case_id.strip() else None
+    if clean_case_id:
+        with get_db_connection() as conn:
+            case_check = conn.execute("SELECT id FROM cases WHERE id = ? AND user_id = ?", (clean_case_id, user_id)).fetchone()
+            if not case_check:
+                raise HTTPException(status_code=404, detail="Case not found or access denied.")
+
     evidence_id = str(uuid4())
     now = datetime.now(UTC).isoformat()
     file_path_str = None
-    file_name = file.filename if file and file.filename else (title.strip() or f"Evidence-{evidence_id[:8]}")
+    original_filename = Path(file.filename).name if file and file.filename else None
+    file_name = original_filename if original_filename else (title.strip() or f"Evidence-{evidence_id[:8]}")
     file_type = file.content_type if file and file.content_type else "text/plain"
 
     if file:
         UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+        max_bytes = settings.max_upload_mb * 1024 * 1024
+        contents = await file.read()
+        if len(contents) > max_bytes:
+            raise HTTPException(
+                status_code=422,
+                detail=f"File exceeds maximum upload size of {settings.max_upload_mb} MB.",
+            )
+
         safe_filename = f"{evidence_id}_{file_name}"
         target_path = UPLOADS_DIR / safe_filename
-        contents = await file.read()
         target_path.write_bytes(contents)
         file_path_str = f"/data/uploads/{safe_filename}"
 
@@ -94,7 +114,7 @@ async def upload_evidence(
             (
                 evidence_id,
                 user_id,
-                case_id if case_id and case_id.strip() else None,
+                clean_case_id,
                 file_name,
                 file_type,
                 file_path_str,
@@ -109,6 +129,30 @@ async def upload_evidence(
         return format_evidence_row(row)
 
 
+@router.get("/{evidence_id}/download")
+async def download_evidence(
+    evidence_id: str,
+    user_id: str = Depends(require_auth_user_id),
+):
+    with get_db_connection() as conn:
+        row = conn.execute("SELECT * FROM evidence WHERE id = ? AND user_id = ?", (evidence_id, user_id)).fetchone()
+        if not row or not row["file_path"]:
+            raise HTTPException(status_code=404, detail="Evidence file not found.")
+
+        rel = row["file_path"].replace("/data/uploads/", "")
+        local_file = (UPLOADS_DIR / rel).resolve()
+        uploads_resolved = UPLOADS_DIR.resolve()
+
+        if not local_file.is_relative_to(uploads_resolved) or not local_file.exists():
+            raise HTTPException(status_code=404, detail="Evidence file not found.")
+
+        return FileResponse(
+            path=local_file,
+            media_type=row["file_type"],
+            filename=row["file_name"],
+        )
+
+
 @router.delete("/{evidence_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_evidence(
     evidence_id: str,
@@ -121,12 +165,14 @@ async def delete_evidence(
 
         if row["file_path"]:
             rel = row["file_path"].replace("/data/uploads/", "")
-            local_file = UPLOADS_DIR / rel
-            if local_file.exists():
+            local_file = (UPLOADS_DIR / rel).resolve()
+            uploads_resolved = UPLOADS_DIR.resolve()
+            if local_file.is_relative_to(uploads_resolved) and local_file.exists():
                 try:
                     local_file.unlink()
                 except Exception:
                     pass
 
-        conn.execute("DELETE FROM evidence WHERE id = ?", (evidence_id,))
+        conn.execute("DELETE FROM evidence WHERE id = ? AND user_id = ?", (evidence_id, user_id))
         conn.commit()
+

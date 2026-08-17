@@ -89,8 +89,8 @@ async def register(req: UserRegisterRequest):
     email = req.email.strip().lower()
     if not email or "@" not in email:
         raise HTTPException(status_code=422, detail="Please enter a valid email address.")
-    if len(req.password) < 4:
-        raise HTTPException(status_code=422, detail="Password must be at least 4 characters long.")
+    if len(req.password) < 8:
+        raise HTTPException(status_code=422, detail="Password must be at least 8 characters long.")
 
     name = req.name.strip() if req.name and req.name.strip() else email.split("@")[0]
     user_id = str(uuid4())
@@ -155,8 +155,20 @@ async def update_profile(req: ProfileUpdateRequest, user_id: str = Depends(requi
     with get_db_connection() as conn:
         if req.name is not None or req.email is not None:
             current_user = conn.execute("SELECT email, name FROM users WHERE id = ?", (user_id,)).fetchone()
-            new_name = req.name.strip() if req.name is not None and req.name.strip() else current_user["name"]
-            new_email = req.email.strip().lower() if req.email is not None and req.email.strip() else current_user["email"]
+            
+            if req.name is not None:
+                if not req.name.strip():
+                    raise HTTPException(status_code=422, detail="Name cannot be empty.")
+                new_name = req.name.strip()
+            else:
+                new_name = current_user["name"]
+
+            if req.email is not None:
+                new_email = req.email.strip().lower()
+                if not new_email or "@" not in new_email:
+                    raise HTTPException(status_code=422, detail="Please enter a valid email address.")
+            else:
+                new_email = current_user["email"]
 
             if new_email != current_user["email"]:
                 conflict = conn.execute("SELECT id FROM users WHERE email = ? AND id != ?", (new_email, user_id)).fetchone()

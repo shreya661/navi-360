@@ -123,15 +123,23 @@ async def list_user_analyses(authorization: str | None = Header(default=None)) -
 
 
 @router.get("/analyses/{request_id}", response_model=AnalysisResponse)
-async def read_analysis(request_id: str) -> AnalysisResponse:
-    saved = get_analysis(request_id)
+async def read_analysis(
+    request_id: str,
+    authorization: str | None = Header(default=None),
+) -> AnalysisResponse:
+    user_id = get_current_user_id(authorization)
+    saved = get_analysis(request_id, user_id=user_id)
     if not saved:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Saved analysis not found.")
     return saved
 
 
 @router.delete("/analyses/{request_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def remove_analysis(request_id: str) -> Response:
-    if not delete_analysis(request_id):
+async def remove_analysis(
+    request_id: str,
+    authorization: str | None = Header(default=None),
+) -> Response:
+    user_id = get_current_user_id(authorization)
+    if not delete_analysis(request_id, user_id=user_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Saved analysis not found.")
     return Response(status_code=status.HTTP_204_NO_CONTENT)

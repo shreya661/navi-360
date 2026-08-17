@@ -82,7 +82,7 @@ Upload or capture a photo of a government notice. NAVI 360 processes the documen
 | **Document checklist** | Identifies required documents mentioned in the notice |
 | **Official source linking** | Points users toward the verified government source |
 | **Multilingual output** | Explains the notice in English, Hindi, Telugu, Tamil, or Bengali |
-| **Audio playback** | Listen to the explanation via Bhashini TTS integration |
+| **Audio playback** | Listen to the explanation via Bhashini TTS integration (falls back to native browser text-to-speech if unconfigured) |
 | **Demo mode** | Works without an API key using intelligent text-based fallback extraction |
 
 ### Case Management
@@ -370,6 +370,12 @@ docker compose up --build -d
 4. Set `ALLOWED_ORIGINS` to your Render service URL in the dashboard
 5. Optionally set `NVIDIA_API_KEY` as a secret for live AI
 6. Deploy — health check at `/api/health` confirms it's running
+
+> [!WARNING]
+> **SQLite Ephemeral Storage Warning (Render Free tier):**
+> Render's Free tier does not persist files written to disk between restarts.
+> As a result, the SQLite database (`data/navi360.db`) and uploaded files under `data/uploads/` will be reset whenever the service restarts (typically once a day or on redeployment).
+> For a full production deployment requiring permanent persistence, configure a persistent disk mount on Render, or integrate PostgreSQL or external object storage (e.g. AWS S3) for uploads.
 
 ### Option 3: Railway
 

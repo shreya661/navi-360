@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { deleteEvidence, fetchEvidence, uploadEvidence } from '../lib/api'
+import { deleteEvidence, downloadEvidenceFile, fetchEvidence, uploadEvidence } from '../lib/api'
 
 export default function EvidenceVaultView({ user, onOpenAuth }) {
   const [evidenceList, setEvidenceList] = useState([])
   const [category, setCategory] = useState('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [downloadingId, setDownloadingId] = useState(null)
 
   // Upload Modal State
   const [isUploadOpen, setIsUploadOpen] = useState(false)
@@ -16,6 +17,18 @@ export default function EvidenceVaultView({ user, onOpenAuth }) {
   const [uploading, setUploading] = useState(false)
 
   const categories = ['all', 'Documents', 'Screenshots', 'Receipts', 'Official Sources', 'Analysis Results']
+
+  const handleDownload = async (item, e) => {
+    if (e) e.stopPropagation()
+    setDownloadingId(item.id)
+    try {
+      await downloadEvidenceFile(item.id, item.file_name)
+    } catch (err) {
+      alert(err.message || 'Failed to download evidence file.')
+    } finally {
+      setDownloadingId(null)
+    }
+  }
 
   const loadEvidence = async () => {
     setLoading(true)
@@ -162,15 +175,29 @@ export default function EvidenceVaultView({ user, onOpenAuth }) {
                   <span>Category: {item.source}</span>
                   {item.file_path && <span>Stored Securely</span>}
                 </div>
-                <button
-                  type="button"
-                  className="icon-delete-btn"
-                  onClick={(e) => handleDelete(item.id, e)}
-                  aria-label="Delete Evidence"
-                  title="Delete Evidence"
-                >
-                  🗑️
-                </button>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  {item.file_path && (
+                    <button
+                      type="button"
+                      className="icon-delete-btn"
+                      onClick={(e) => handleDownload(item, e)}
+                      aria-label="Download Evidence File"
+                      title="Download Evidence File"
+                      disabled={downloadingId === item.id}
+                    >
+                      {downloadingId === item.id ? '⏳' : '📥'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="icon-delete-btn"
+                    onClick={(e) => handleDelete(item.id, e)}
+                    aria-label="Delete Evidence"
+                    title="Delete Evidence"
+                  >
+                    🗑️
+                  </button>
+                </div>
               </div>
             </div>
           ))}
