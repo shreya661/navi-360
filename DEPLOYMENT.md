@@ -3,13 +3,12 @@
 ## Before deployment
 
 1. Create a `.env` file from `.env.example`; never commit it.
-2. Set a real `NVIDIA_API_KEY` and use the exact model IDs shown by the NVIDIA API Catalog.
-3. For a real public service, set these production values:
+2. Optionally set `NVIDIA_API_KEY` for live AI (the app works in demo mode without it).
+3. For a production deployment, set these values:
 
    ```env
    APP_ENV=production
    EXPOSE_DOCS=false
-   REQUIRE_LIVE_AI=true
    ALLOWED_ORIGINS=https://your-domain.example
    ANALYSIS_RETENTION_DAYS=30
    RATE_LIMIT_PER_MINUTE=20
@@ -17,57 +16,68 @@
 
 4. Use a domain with HTTPS. Never deploy the API with `ALLOWED_ORIGINS=*`.
 
-## Docker deployment
+## Docker deployment (Local)
 
-The included Docker Compose configuration runs the API and frontend together. It stores the SQLite data in a named Docker volume so redeploying containers does not erase saved analyses.
+The `docker-compose.yml` builds the entire stack (React frontend + FastAPI backend) into a single container using the root `Dockerfile`. Data is persisted in a named Docker volume.
 
-```powershell
-Copy-Item .env.example .env
-# Edit .env and add NVIDIA_API_KEY, then set production values above.
+```bash
+cp .env.example .env
+# Edit .env — optionally add NVIDIA_API_KEY for live AI
 docker compose up --build -d
 ```
 
-Open `http://localhost:8080`. For an internet-facing deployment, put this stack behind your cloud provider's HTTPS load balancer or reverse proxy and set `ALLOWED_ORIGINS` to the public site URL.
+Open `http://localhost:8000`. The frontend and API are served from the same origin — no CORS issues.
 
-## Recommended: Railway + SQLite
+For an internet-facing deployment, put this behind your cloud provider's HTTPS load balancer and set `ALLOWED_ORIGINS` to the public site URL.
 
-Railway is the simplest production host for the current application because it can deploy from GitHub and attach a persistent volume to the same service. NAVI includes a root `Dockerfile` and `railway.toml` that build the React frontend and FastAPI API into one web service.
+## Render (Free Tier — Recommended)
 
-1. Push this project to a new GitHub repository.
-2. In Railway, choose **New Project** → **Deploy from GitHub Repo** and select the repository.
+Render is the simplest free deployment option. The included `render.yaml` configures everything automatically.
+
+1. Push this project to GitHub.
+2. In Render, choose **New → Web Service** and connect the GitHub repo.
+3. Render auto-detects the `render.yaml` — confirm the settings.
+4. In the Render dashboard, set these environment variables:
+   - `ALLOWED_ORIGINS` = your Render service URL (e.g. `https://navi-360.onrender.com`)
+   - `NVIDIA_API_KEY` = your NVIDIA NIM key *(optional, for live AI)*
+5. Deploy. The health check at `/api/health` confirms the service is running.
+
+## Railway
+
+Railway can deploy from GitHub and attach a persistent volume.
+
+1. Push this project to GitHub.
+2. In Railway, choose **New Project → Deploy from GitHub Repo** and select the repository.
 3. Add a Railway volume and mount it at `/data`.
 4. Add these service variables:
 
    ```env
    APP_ENV=production
    EXPOSE_DOCS=false
-   REQUIRE_LIVE_AI=true
    ANALYSIS_DB_PATH=/data/navi360.db
    ANALYSIS_RETENTION_DAYS=30
-   NVIDIA_API_KEY=your_nvidia_key
    ```
 
-5. Deploy. Railway provides an HTTPS domain; open it and confirm `/health` returns `ok`.
-
-This SQLite setup must run as one service replica because a SQLite file cannot be shared safely by multiple application instances. Railway volumes persist across redeploys and can be backed up. If NAVI grows to multiple replicas, migrate the stored summaries to Postgres.
+5. Optionally add `NVIDIA_API_KEY` for live AI.
+6. Deploy. Railway provides an HTTPS domain; open it and confirm `/api/health` returns `ok`.
 
 ## Separate frontend and backend hosts
 
-Build the frontend with the public API origin:
+If you need the frontend and backend on different servers:
 
-```powershell
+```bash
 cd frontend
-$env:VITE_API_URL = "https://api.your-domain.example"
-npm run build
+VITE_API_URL=https://api.your-domain.example npm run build
 ```
 
-Deploy `frontend/dist` to any static hosting provider. Deploy the backend container to a service that supports persistent disks; mount the disk at `/app/data`. Configure `ALLOWED_ORIGINS=https://your-domain.example` on the backend.
+Deploy `frontend/dist` to any static hosting provider. Deploy the backend container to a service with persistent disks; mount the disk at `/app/data`. Set `ALLOWED_ORIGINS` on the backend to the frontend URL.
 
 ## Operational checklist
 
-- Keep NVIDIA, Bhashini, and any provider credentials only in your platform's encrypted environment variables.
-- Run only one backend replica while using SQLite. For multiple replicas, move `analysis_store.py` to managed PostgreSQL first.
-- Use provider-level rate limiting/WAF in addition to the in-process limit.
-- Review the official-source catalog regularly; it intentionally never searches the web or creates URLs at runtime.
-- Monitor `/health` for liveness and `/ready` for whether live AI configuration is present.
-- Results are retained for 30 days by default. NAVI deliberately does not store original uploads, pasted text, extracted source text, previews, or audio.
+- Keep NVIDIA, Bhashini, and any provider credentials only in encrypted environment variables.
+- Run only one backend replica while using SQLite. For multiple replicas, migrate to PostgreSQL.
+- Use provider-level rate limiting / WAF in addition to the in-process limit.
+- Monitor `/api/health` for liveness and `/api/ready` for AI configuration status.
+- Sessions expire after 30 days automatically.
+- Results are retained for 30 days by default (`ANALYSIS_RETENTION_DAYS`).
+- NAVI 360 does not store original uploads permanently — only metadata and extracted text.
