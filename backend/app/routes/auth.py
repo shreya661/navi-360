@@ -7,7 +7,7 @@ import secrets
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 from ..services.database import get_db_connection, hash_password, verify_password
 
@@ -42,7 +42,12 @@ def get_current_user_id(authorization: str | None = Header(default=None)) -> str
         return None
 
     with get_db_connection() as conn:
-        row = conn.execute("SELECT user_id FROM sessions WHERE token = ?", (token,)).fetchone()
+        row = conn.execute(
+            """SELECT user_id FROM sessions
+               WHERE token = ?
+               AND created_at > datetime('now', '-30 days')""",
+            (token,),
+        ).fetchone()
         if row:
             return row["user_id"]
     return None

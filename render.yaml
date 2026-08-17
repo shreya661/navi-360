@@ -5,8 +5,8 @@ services:
     plan: free
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /health
-    autoDeployTrigger: commit
+    healthCheckPath: /api/health
+    autoDeploy: true
     envVars:
       - key: APP_ENV
         value: production
@@ -15,6 +15,21 @@ services:
       - key: REQUIRE_LIVE_AI
         value: "false"
       - key: ANALYSIS_RETENTION_DAYS
-        value: "1"
+        value: "30"
       - key: RATE_LIMIT_PER_MINUTE
         value: "20"
+      # IMPORTANT: Set ALLOWED_ORIGINS to your real Render service URL in the Render dashboard
+      # e.g. https://navi-360.onrender.com
+      # Without this, CORS will block all frontend API requests in production.
+      - key: ALLOWED_ORIGINS
+        value: "https://navi-360.onrender.com"
+      # NVIDIA API Key — set this secret in the Render dashboard, never commit it
+      - key: NVIDIA_API_KEY
+        sync: false
+      # Bhashini TTS — set these in Render dashboard if using live voice output
+      - key: BHASHINI_TTS_URL
+        sync: false
+      - key: BHASHINI_API_KEY
+        sync: false
+      - key: BHASHINI_USER_ID
+        sync: false

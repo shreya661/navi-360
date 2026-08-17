@@ -15,7 +15,8 @@ WORKDIR /app
 COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/app ./app
-COPY data ./data
+# Do NOT copy local data/ — the app creates this directory at runtime
+RUN mkdir -p /app/data/uploads
 COPY --from=frontend-build /frontend/dist ./frontend/dist
 RUN useradd --create-home appuser && chown -R appuser:appuser /app
 USER appuser

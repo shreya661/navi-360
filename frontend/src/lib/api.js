@@ -4,13 +4,12 @@ function getBaseUrl() {
   if (rawUrl && rawUrl.trim() !== '') {
     return rawUrl.replace(/\/+$/, '')
   }
-  if (typeof window !== 'undefined' && window.location) {
-    // If running in production (served from FastAPI on port 8000/443/80), use relative URL ""
-    if (window.location.port !== '5173') {
-      return ''
-    }
+  // In Vite dev mode (npm run dev), use localhost backend.
+  // In production (built bundle served from FastAPI), use same-origin relative URL.
+  if (import.meta.env.DEV) {
+    return 'http://localhost:8000'
   }
-  return 'http://localhost:8000'
+  return ''
 }
 
 const API_URL = getBaseUrl()

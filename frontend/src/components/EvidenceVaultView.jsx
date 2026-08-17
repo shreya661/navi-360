@@ -47,7 +47,7 @@ export default function EvidenceVaultView({ user, onOpenAuth }) {
 
   const handleUploadSubmit = async (e) => {
     e.preventDefault()
-    if (!file && !textContent.strip?.()) {
+    if (!file && !textContent.trim()) {
       alert('Please select a file or enter text content.')
       return
     }

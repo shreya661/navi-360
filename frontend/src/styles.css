@@ -1189,7 +1189,12 @@ footer { display: flex; padding: 24px 0; border-top: 1px solid #d9ddd4; justify-
   font-size: 24px;
 }
 
-
-
-
+/* Header-row action buttons should not stretch full width */
+.cases-header-row .primary-button,
+.cases-header-row .split-primary-button {
+  width: auto;
+  flex-shrink: 0;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+}
 
