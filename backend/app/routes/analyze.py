@@ -7,7 +7,7 @@ from fastapi import APIRouter, File, Form, Header, HTTPException, Response, Uplo
 
 from ..models.schemas import AnalysisResponse, AudioSegment, LanguageCode
 from ..services.classify_notice import classify_notice
-from ..services.analysis_store import delete_analysis, get_analysis, save_analysis
+from ..services.analysis_store import delete_analysis, get_analysis, get_user_analyses, save_analysis
 from ..services.evidence_extract import (
     IMAGE_TYPES,
     PreparedEvidence,
@@ -23,18 +23,24 @@ from ..services.translator import rewrite_for_language
 from ..services.trust_tagger import tag_claims
 from ..services.tts_service import synthesize
 from ..services.vision_extract import extract_notice
+from .auth import get_current_user_id
 
 
 router = APIRouter(tags=["analysis"])
+
+
 @router.post("/analyze", response_model=AnalysisResponse)
 async def analyze_notice(
     files: list[UploadFile] = File(default=[]),
     text_input: str = Form(""),
     language: LanguageCode = Form("te"),
     x_nvidia_api_key: str | None = Header(default=None),
+    authorization: str | None = Header(default=None),
 ) -> AnalysisResponse:
     settings = get_settings()
     effective_api_key = x_nvidia_api_key or settings.nvidia_api_key
+    user_id = get_current_user_id(authorization)
+
     if settings.require_live_ai and not effective_api_key:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Live AI is not configured. Contact the service administrator.")
     if not files and not text_input.strip():
@@ -104,8 +110,16 @@ async def analyze_notice(
         audio_segments=[AudioSegment(label="Plain-language explanation", text=explanation, audio_url=audio_url)],
         disclaimer="NAVI explains the notice; it does not decide eligibility or replace the official portal.",
     )
-    save_analysis(response)
+    save_analysis(response, user_id=user_id)
     return response
+
+
+@router.get("/analyses", response_model=list[AnalysisResponse])
+async def list_user_analyses(authorization: str | None = Header(default=None)) -> list[AnalysisResponse]:
+    user_id = get_current_user_id(authorization)
+    if not user_id:
+        return []
+    return get_user_analyses(user_id)
 
 
 @router.get("/analyses/{request_id}", response_model=AnalysisResponse)

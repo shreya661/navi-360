@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createCase } from '../lib/api'
 
 function reportText(result) {
   const source = result.official_source
@@ -26,8 +27,10 @@ function reportText(result) {
   ].filter(Boolean).join('\n')
 }
 
-export default function ResultActions({ result }) {
+export default function ResultActions({ result, onCaseCreated, user, onOpenAuth }) {
   const [copied, setCopied] = useState(false)
+  const [savingCase, setSavingCase] = useState(false)
+  const [caseSaved, setCaseSaved] = useState(false)
 
   function download() {
     const blob = new Blob([reportText(result)], { type: 'text/plain;charset=utf-8' })
@@ -49,10 +52,40 @@ export default function ResultActions({ result }) {
     }
   }
 
+  async function handleSaveAsCase() {
+    if (!user) {
+      if (onOpenAuth) onOpenAuth()
+      return
+    }
+    setSavingCase(true)
+    try {
+      await createCase({
+        title: result.notice.title || 'Notice Analysis Case',
+        category: result.notice.notice_type || 'General Notice',
+        status: 'Action Required',
+        priority: 'Critical',
+        summary: result.plain_explanation || '',
+        request_id: result.request_id,
+      })
+      setCaseSaved(true)
+      if (onCaseCreated) onCaseCreated()
+    } catch (err) {
+      alert(err.message || 'Failed to save case.')
+    } finally {
+      setSavingCase(false)
+    }
+  }
+
   return (
     <section className="result-actions" aria-label="Save your summary">
-      <div><p className="eyebrow">Keep a copy</p><strong>Your files stay private. Download contains only this summary.</strong></div>
+      <div>
+        <p className="eyebrow">Keep a copy</p>
+        <strong>Your files stay private. Save to your cases or download summary.</strong>
+      </div>
       <div className="action-buttons">
+        <button type="button" onClick={handleSaveAsCase} disabled={savingCase || caseSaved}>
+          {caseSaved ? '✓ Saved to Cases' : savingCase ? 'Saving...' : '📁 Save as Case'}
+        </button>
         <button type="button" onClick={download}>Download summary</button>
         <button type="button" onClick={copySummary}>{copied ? 'Copied' : 'Copy summary'}</button>
       </div>

@@ -8,30 +8,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from ..models.schemas import AnalysisResponse
+from .database import get_db_connection
 from .settings import get_settings
-
-
-def _database_path() -> Path:
-    configured = Path(get_settings().analysis_db_path)
-    if configured.is_absolute():
-        return configured
-    return Path.cwd() / configured
-
-
-def _connection() -> sqlite3.Connection:
-    path = _database_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(path)
-    connection.execute(
-        """CREATE TABLE IF NOT EXISTS analyses (
-        request_id TEXT PRIMARY KEY,
-        created_at TEXT NOT NULL,
-        language TEXT NOT NULL,
-        notice_type TEXT NOT NULL,
-        payload TEXT NOT NULL
-        )"""
-    )
-    return connection
 
 
 def _safe_payload(response: AnalysisResponse) -> dict:
@@ -45,13 +23,17 @@ def _safe_payload(response: AnalysisResponse) -> dict:
     return payload
 
 
-def save_analysis(response: AnalysisResponse) -> None:
+def save_analysis(response: AnalysisResponse, user_id: str | None = None) -> None:
     payload = _safe_payload(response)
-    with _connection() as connection:
-        connection.execute(
-            "INSERT OR REPLACE INTO analyses (request_id, created_at, language, notice_type, payload) VALUES (?, ?, ?, ?, ?)",
+    with get_db_connection() as conn:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO analyses (request_id, user_id, created_at, language, notice_type, payload)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
             (
                 response.request_id,
+                user_id,
                 datetime.now(UTC).isoformat(),
                 response.language,
                 response.notice.notice_type,
@@ -60,16 +42,27 @@ def save_analysis(response: AnalysisResponse) -> None:
         )
         retention_days = get_settings().analysis_retention_days
         if retention_days > 0:
-            connection.execute("DELETE FROM analyses WHERE created_at < datetime('now', ?)", (f"-{retention_days} days",))
+            conn.execute("DELETE FROM analyses WHERE created_at < datetime('now', ?)", (f"-{retention_days} days",))
+        conn.commit()
 
 
 def get_analysis(request_id: str) -> AnalysisResponse | None:
-    with _connection() as connection:
-        row = connection.execute("SELECT payload FROM analyses WHERE request_id = ?", (request_id,)).fetchone()
-    return AnalysisResponse.model_validate_json(row[0]) if row else None
+    with get_db_connection() as conn:
+        row = conn.execute("SELECT payload FROM analyses WHERE request_id = ?", (request_id,)).fetchone()
+    return AnalysisResponse.model_validate_json(row["payload"]) if row else None
+
+
+def get_user_analyses(user_id: str) -> list[AnalysisResponse]:
+    with get_db_connection() as conn:
+        rows = conn.execute(
+            "SELECT payload FROM analyses WHERE user_id = ? ORDER BY created_at DESC LIMIT 50",
+            (user_id,),
+        ).fetchall()
+    return [AnalysisResponse.model_validate_json(row["payload"]) for row in rows]
 
 
 def delete_analysis(request_id: str) -> bool:
-    with _connection() as connection:
-        cursor = connection.execute("DELETE FROM analyses WHERE request_id = ?", (request_id,))
+    with get_db_connection() as conn:
+        cursor = conn.execute("DELETE FROM analyses WHERE request_id = ?", (request_id,))
+        conn.commit()
     return cursor.rowcount > 0

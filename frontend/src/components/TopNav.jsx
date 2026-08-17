@@ -1,4 +1,33 @@
-export default function TopNav({ activeView, user, onOpenAuth }) {
+import { useEffect, useState } from 'react'
+import { checkReadiness } from '../lib/api'
+
+export default function TopNav({ activeView, user, onOpenAuth, onSearch }) {
+  const [aiStatus, setAiStatus] = useState('Checking...')
+  const [isLive, setIsLive] = useState(false)
+  const [query, setQuery] = useState('')
+
+  useEffect(() => {
+    checkReadiness()
+      .then((res) => {
+        if (res.ready) {
+          if (res.live_ai_configured) {
+            setAiStatus('AI Live')
+            setIsLive(true)
+          } else {
+            setAiStatus('AI Active (Demo)')
+            setIsLive(true)
+          }
+        } else {
+          setAiStatus('Offline')
+          setIsLive(false)
+        }
+      })
+      .catch(() => {
+        setAiStatus('Offline')
+        setIsLive(false)
+      })
+  }, [])
+
   const titles = {
     civic: 'NAVI Civic',
     protect: 'NAVI Protect',
@@ -12,12 +41,18 @@ export default function TopNav({ activeView, user, onOpenAuth }) {
   const currentTitle = titles[activeView] || 'NAVI 360'
   const initial = (user?.name || 'S').charAt(0).toUpperCase()
 
+  const handleSearchSubmit = (e) => {
+    if (e.key === 'Enter' && query.trim() && onSearch) {
+      onSearch(query.trim())
+    }
+  }
+
   return (
     <header className="topnav-bar">
       <div className="topnav-left">
         <h1 className="topnav-title">{currentTitle}</h1>
         <span className="ai-status-pill">
-          <span className="online-dot" /> AI Online
+          <span className={isLive ? 'online-dot' : 'status-dot'} /> {aiStatus}
         </span>
       </div>
 
@@ -26,7 +61,10 @@ export default function TopNav({ activeView, user, onOpenAuth }) {
           <span className="search-icon">🔍</span>
           <input
             type="text"
-            placeholder="Search cases, evidence or actions..."
+            placeholder="Search official government sources..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleSearchSubmit}
             aria-label="Global search"
           />
         </div>

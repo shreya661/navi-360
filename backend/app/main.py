@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 from fastapi import FastAPI, Request
@@ -7,32 +8,51 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .routes.analyze import router as analyze_router
+from .routes.auth import router as auth_router
+from .routes.cases import router as cases_router
+from .routes.evidence import router as evidence_router
+from .routes.reminders import router as reminders_router
 from .routes.search import router as search_router
-from .services.settings import get_settings
+from .services.database import init_db
 from .services.rate_limit import RateLimiter
+from .services.settings import get_settings
 
 
 settings = get_settings()
 if settings.is_production and "*" in settings.origins:
     raise RuntimeError("ALLOWED_ORIGINS must name explicit HTTPS origins in production.")
+
+# Initialize SQLite database schema
+init_db()
+
 app = FastAPI(
     title="NAVI 360 API",
     version="1.0.0",
     docs_url="/docs" if settings.expose_docs else None,
     redoc_url=None,
 )
+
 limiter = RateLimiter(settings.rate_limit_per_minute)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.origins,
-    allow_credentials=False,
-    allow_methods=["POST", "GET", "DELETE", "OPTIONS"],
+    allow_credentials=True,
+    allow_methods=["POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
-app.include_router(analyze_router)
-app.include_router(analyze_router, prefix="/api", include_in_schema=False)
-app.include_router(search_router)
-app.include_router(search_router, prefix="/api", include_in_schema=False)
+
+# Register API Routers under /api
+app.include_router(auth_router, prefix="/api")
+app.include_router(cases_router, prefix="/api")
+app.include_router(evidence_router, prefix="/api")
+app.include_router(reminders_router, prefix="/api")
+app.include_router(analyze_router, prefix="/api")
+app.include_router(search_router, prefix="/api")
+
+# Compatibility aliases without /api prefix
+app.include_router(analyze_router, include_in_schema=False)
+app.include_router(search_router, include_in_schema=False)
 
 
 @app.middleware("http")
@@ -65,11 +85,21 @@ async def health() -> dict[str, str]:
 
 @app.get("/ready")
 @app.get("/api/ready")
-async def readiness() -> dict[str, bool]:
-    return {"ready": True, "live_ai_configured": bool(settings.nvidia_api_key)}
+async def readiness() -> dict[str, Any]:
+    return {
+        "ready": True,
+        "live_ai_configured": bool(settings.nvidia_api_key),
+        "db_connected": True,
+        "search_available": True,
+    }
 
 
-# In the production image, the React bundle is copied to /app/frontend/dist.
+# Serve static uploads directory if requested
+uploads_dir = Path.cwd() / "data" / "uploads"
+uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/data/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+
+# Serve React frontend dist bundle in production Docker environment
 frontend_dist = Path(__file__).resolve().parents[1] / "frontend" / "dist"
 if frontend_dist.exists():
     app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")

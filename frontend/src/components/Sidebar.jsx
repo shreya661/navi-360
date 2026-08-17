@@ -1,4 +1,4 @@
-export default function Sidebar({ activeView, setActiveView, user, onOpenAuth, casesCount = 3, remindersCount = 2 }) {
+export default function Sidebar({ activeView, setActiveView, user, onOpenAuth, casesCount = 0, remindersCount = 0 }) {
   const displayName = user?.name || (user?.email ? user.email.split('@')[0] : 'Sign In')
   const initial = displayName.charAt(0).toUpperCase()
   const displaySub = user?.email || (user?.name ? 'Personal Account' : 'Click to set up profile')
@@ -11,7 +11,6 @@ export default function Sidebar({ activeView, setActiveView, user, onOpenAuth, c
           <span className="logo-badge">N3</span>
           <span className="logo-text">NAVI <em>360</em></span>
         </div>
-        <button type="button" className="sidebar-collapse-btn" aria-label="Collapse sidebar">◀</button>
       </div>
 
       <nav className="sidebar-nav">

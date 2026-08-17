@@ -6,7 +6,7 @@ import ResultActions from './ResultActions'
 import SafeActionGate from './SafeActionGate'
 import TrustBadge from './TrustBadge'
 
-export default function AnalysisView({ result, onStartOver }) {
+export default function AnalysisView({ result, onStartOver, user, onOpenAuth, onCaseCreated }) {
   const { notice, plain_explanation: explanation, claims, evidence, timeline, missing_information: checklist, official_source: source, safe_next_step: nextStep } = result
   return (
     <div className="analysis-layout">
@@ -52,7 +52,7 @@ export default function AnalysisView({ result, onStartOver }) {
       </div>
       <MissingInfoList items={checklist} />
       <SafeActionGate source={source} nextStep={nextStep} />
-      <ResultActions result={result} />
+      <ResultActions result={result} user={user} onOpenAuth={onOpenAuth} onCaseCreated={onCaseCreated} />
       <p className="disclaimer">{result.disclaimer}</p>
     </div>
   )

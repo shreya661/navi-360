@@ -1,30 +1,29 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import AnalysisView from './components/AnalysisView'
 import AuthModal from './components/AuthModal'
+import CasesView from './components/CasesView'
+import EvidenceVaultView from './components/EvidenceVaultView'
 import HistoryDrawer from './components/HistoryDrawer'
 import LanguageToggle from './components/LanguageToggle'
 import NaviProtectView from './components/NaviProtectView'
+import RemindersView from './components/RemindersView'
 import SearchPanel from './components/SearchPanel'
 import SettingsView from './components/SettingsView'
 import Sidebar from './components/Sidebar'
 import TopNav from './components/TopNav'
 import UploadPanel from './components/UploadPanel'
 import { useAnalyzeDocument } from './hooks/useAnalyzeDocument'
+import { fetchCases, fetchMe, fetchReminders, getAuthToken, setAuthToken } from './lib/api'
 
 export default function App() {
-  const [activeView, setActiveView] = useState('protect') // Default active view matching user's screenshot
+  const [activeView, setActiveView] = useState('protect')
   const [language, setLanguage] = useState('te')
   const { status, stage, stages, result, error, analyze, reset, loadResult } = useAnalyzeDocument()
   const loading = status === 'loading'
 
-  const [user, setUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem('navi360_user')
-      return saved ? JSON.parse(saved) : null
-    } catch {
-      return null
-    }
-  })
+  const [user, setUser] = useState(null)
+  const [casesCount, setCasesCount] = useState(0)
+  const [remindersCount, setRemindersCount] = useState(0)
 
   const [history, setHistory] = useState(() => {
     try {
@@ -38,13 +37,45 @@ export default function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
 
-  const saveUser = (userData) => {
-    setUser(userData)
-    if (userData) {
-      localStorage.setItem('navi360_user', JSON.stringify(userData))
-    } else {
-      localStorage.removeItem('navi360_user')
+  const refreshUserData = async () => {
+    const token = getAuthToken()
+    if (!token) {
+      setUser(null)
+      setCasesCount(0)
+      setRemindersCount(0)
+      return
     }
+    try {
+      const u = await fetchMe()
+      setUser(u)
+      if (u.language) setLanguage(u.language)
+    } catch {
+      setAuthToken(null)
+      setUser(null)
+    }
+
+    try {
+      const casesRes = await fetchCases()
+      setCasesCount(casesRes.total || 0)
+    } catch {
+      setCasesCount(0)
+    }
+
+    try {
+      const remRes = await fetchReminders()
+      setRemindersCount(remRes.active_count || 0)
+    } catch {
+      setRemindersCount(0)
+    }
+  }
+
+  useEffect(() => {
+    refreshUserData()
+  }, [])
+
+  const handleSaveUser = (userData) => {
+    setUser(userData)
+    refreshUserData()
   }
 
   const handleAnalyze = async (files, textInput) => {
@@ -76,8 +107,8 @@ export default function App() {
         setActiveView={setActiveView}
         user={user}
         onOpenAuth={() => setIsAuthOpen(true)}
-        casesCount={history.length > 0 ? history.length : 3}
-        remindersCount={2}
+        casesCount={casesCount}
+        remindersCount={remindersCount}
       />
 
       {/* Main Content Area */}
@@ -95,7 +126,13 @@ export default function App() {
 
           {(activeView === 'civic' || activeView === 'home') && (
             result ? (
-              <AnalysisView result={result} onStartOver={reset} />
+              <AnalysisView
+                result={result}
+                onStartOver={reset}
+                user={user}
+                onOpenAuth={() => setIsAuthOpen(true)}
+                onCaseCreated={refreshUserData}
+              />
             ) : (
               <div className="landing-grid">
                 <section className="hero">
@@ -120,32 +157,21 @@ export default function App() {
           )}
 
           {activeView === 'cases' && (
-            <div className="placeholder-view">
-              <h2>My Cases ({history.length})</h2>
-              <p>Your recent document and notice analyses.</p>
-              <button type="button" className="primary-button inline-button" onClick={() => setIsHistoryOpen(true)}>
-                Open History Drawer
-              </button>
-            </div>
+            <CasesView user={user} onOpenAuth={() => setIsAuthOpen(true)} />
           )}
 
           {activeView === 'evidence' && (
-            <div className="placeholder-view">
-              <h2>Evidence Vault</h2>
-              <p>Upload and organize document evidence securely.</p>
-            </div>
+            <EvidenceVaultView user={user} onOpenAuth={() => setIsAuthOpen(true)} />
           )}
 
           {activeView === 'reminders' && (
-            <div className="placeholder-view">
-              <h2>Active Reminders</h2>
-              <p>Deadline trackers for post-matric scholarships, tax notices, and bill due dates.</p>
-            </div>
+            <RemindersView user={user} onOpenAuth={() => setIsAuthOpen(true)} />
           )}
 
           {activeView === 'settings' && (
             <SettingsView
               user={user}
+              onUserUpdated={setUser}
               onOpenAuth={() => setIsAuthOpen(true)}
               language={language}
               setLanguage={setLanguage}
@@ -158,7 +184,7 @@ export default function App() {
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         user={user}
-        onSaveUser={saveUser}
+        onSaveUser={handleSaveUser}
       />
 
       <HistoryDrawer
